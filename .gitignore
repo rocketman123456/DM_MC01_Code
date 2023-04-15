@@ -17,10 +17,11 @@
 *.pch
 
 # Libraries
-*.lib
+#*.lib
 *.a
 *.la
 *.lo
+*.crf
 
 # Shared objects (inc. Windows DLLs)
 *.dll

@@ -24,7 +24,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "usbd_cdc_if.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -121,9 +121,9 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-      CDC_Transmit_FS("USB CDC Hello!\n", 15);
-      HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_0);
-      HAL_Delay(100);
+    //CDC_Transmit_FS("USB CDC Hello!\n", 15);
+    HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_0);
+    HAL_Delay(100);
   }
   /* USER CODE END 3 */
 }
