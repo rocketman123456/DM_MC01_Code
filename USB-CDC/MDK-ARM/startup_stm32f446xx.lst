@@ -868,11 +868,11 @@ ARM Macro Assembler    Page 14
               00000000 
 Command Line: --debug --xref --diag_suppress=9931 --cpu=Cortex-M4.fp.sp --apcs=
 interwork --depend=ctrboard-cdc\startup_stm32f446xx.d -octrboard-cdc\startup_st
-m32f446xx.o -I.\RTE\_CtrBoard-CDC -IC:\Keil_v5\Packs\ARM\CMSIS\5.8.0\CMSIS\Core
-\Include -IC:\Keil_v5\Packs\Keil\STM32F4xx_DFP\2.13.0\Drivers\CMSIS\Device\ST\S
-TM32F4xx\Include --predefine="__MICROLIB SETA 1" --predefine="__UVISION_VERSION
- SETA 536" --predefine="_RTE_ SETA 1" --predefine="STM32F446xx SETA 1" --predef
-ine="_RTE_ SETA 1" --list=startup_stm32f446xx.lst startup_stm32f446xx.s
+m32f446xx.o -I.\RTE\_CtrBoard-CDC -IC:\Arm\Packs\ARM\CMSIS\5.9.0\CMSIS\Core\Inc
+lude -IC:\Arm\Packs\Keil\STM32F4xx_DFP\2.17.0\Drivers\CMSIS\Device\ST\STM32F4xx
+\Include --predefine="__MICROLIB SETA 1" --predefine="__UVISION_VERSION SETA 53
+8" --predefine="_RTE_ SETA 1" --predefine="STM32F446xx SETA 1" --predefine="_RT
+E_ SETA 1" --list=startup_stm32f446xx.lst startup_stm32f446xx.s
 
 
 

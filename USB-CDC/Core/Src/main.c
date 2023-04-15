@@ -55,7 +55,29 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+typedef struct {
+	float p_des;
+	float v_des;
+	float kp;
+	float kd;
+	float t_ff;
+} motor_cmd_t;
 
+typedef struct {
+	float p_des;
+	float v_des;
+	float kp;
+	float kd;
+	float t_ff;
+} motor_data_t;
+
+typedef struct {
+	float p_des;
+	float v_des;
+	float kp;
+	float kd;
+	float t_ff;
+} motor_feedback_t;
 /* USER CODE END 0 */
 
 /**
@@ -99,7 +121,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-      CDC_Transmit_FS("USB CDC Hello!\n",15);
+      CDC_Transmit_FS("USB CDC Hello!\n", 15);
       HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_0);
       HAL_Delay(100);
   }
