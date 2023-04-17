@@ -104,7 +104,7 @@ typedef __packed struct
   * @retval         none
   */
 /**
-  * @brief          Ò£¿ØÆ÷³õÊ¼»¯
+  * @brief          é¥æ§å™¨åˆå§‹åŒ–
   * @param[in]      none
   * @retval         none
   */
@@ -115,9 +115,9 @@ extern void remote_control_init(void);
   * @retval         remote control data point
   */
 /**
-  * @brief          »ñÈ¡Ò£¿ØÆ÷Êı¾İÖ¸Õë
+  * @brief          è·å–é¥æ§å™¨æ•°æ®æŒ‡é’ˆ
   * @param[in]      none
-  * @retval         Ò£¿ØÆ÷Êı¾İÖ¸Õë
+  * @retval         é¥æ§å™¨æ•°æ®æŒ‡é’ˆ
   */
 extern const RC_ctrl_t *get_remote_control_point(void);
 void MX_USART3_UART_Init(void);

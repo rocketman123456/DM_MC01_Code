@@ -40,21 +40,23 @@ struct spi_command_t
     int32_t checksum;
 };
 
-
-
-struct joint_control{
+struct joint_control
+{
     float p_des, v_des, kp, kd, t_ff;
-    };
-    
-struct joint_state{
+};
+
+struct joint_state
+{
     float p, v, t;
-    };
-    
-struct leg_state{
+};
+
+struct leg_state
+{
     joint_state a, h, k;
-    };
-struct leg_control{
+};
+
+struct leg_control
+{
     joint_control a, h, k;
-    }
-    ;
+};
 #endif

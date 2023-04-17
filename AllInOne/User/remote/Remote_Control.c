@@ -34,15 +34,15 @@ void MX_USART3_UART_Init(void)
 void RC_init(uint8_t *rx1_buf, uint8_t *rx2_buf, uint16_t dma_buf_num)
 {
     //enable the DMA transfer for the receiver request
-    //Ê¹ÄÜDMA´®¿Ú½ÓÊÕ
+    //ä½¿èƒ½DMAä¸²å£æ¥æ”¶
     SET_BIT(huart3.Instance->CR3, USART_CR3_DMAR);
 
     //enalbe idle interrupt
-    //Ê¹ÄÜ¿ÕÏĞÖĞ¶Ï
+    //ä½¿èƒ½ç©ºé—²ä¸­æ–­
     __HAL_UART_ENABLE_IT(&huart3, UART_IT_IDLE);
 
     //disable DMA
-    //Ê§Ğ§DMA
+    //å¤±æ•ˆDMA
     __HAL_DMA_DISABLE(&hdma_usart3_rx);
     while(hdma_usart3_rx.Instance->CR & DMA_SxCR_EN)
     {
@@ -51,22 +51,21 @@ void RC_init(uint8_t *rx1_buf, uint8_t *rx2_buf, uint16_t dma_buf_num)
 
     hdma_usart3_rx.Instance->PAR = (uint32_t) & (USART3->DR);
     //memory buffer 1
-    //ÄÚ´æ»º³åÇø1
+    //å†…å­˜ç¼“å†²åŒº1
     hdma_usart3_rx.Instance->M0AR = (uint32_t)(rx1_buf);
     //memory buffer 2
-    //ÄÚ´æ»º³åÇø2
+    //å†…å­˜ç¼“å†²åŒº2
     hdma_usart3_rx.Instance->M1AR = (uint32_t)(rx2_buf);
     //data length
-    //Êı¾İ³¤¶È
+    //æ•°æ®é•¿åº¦
     hdma_usart3_rx.Instance->NDTR = dma_buf_num;
     //enable double memory buffer
-    //Ê¹ÄÜË«»º³åÇø
+    //ä½¿èƒ½åŒç¼“å†²åŒº
     SET_BIT(hdma_usart3_rx.Instance->CR, DMA_SxCR_DBM);
 
     //enable DMA
-    //Ê¹ÄÜDMA
+    //ä½¿èƒ½DMA
     __HAL_DMA_ENABLE(&hdma_usart3_rx);
-
 }
 
 /**
@@ -76,21 +75,21 @@ void RC_init(uint8_t *rx1_buf, uint8_t *rx2_buf, uint16_t dma_buf_num)
   * @retval         none
   */
 /**
-  * @brief          Ò£¿ØÆ÷Ğ­Òé½âÎö
-  * @param[in]      sbus_buf: Ô­ÉúÊı¾İÖ¸Õë
-  * @param[out]     rc_ctrl: Ò£¿ØÆ÷Êı¾İÖ¸
+  * @brief          é¥æ§å™¨åè®®è§£æ
+  * @param[in]      sbus_buf: åŸç”Ÿæ•°æ®æŒ‡é’ˆ
+  * @param[out]     rc_ctrl: é¥æ§å™¨æ•°æ®æŒ‡
   * @retval         none
   */
 static void sbus_to_rc(volatile const uint8_t *sbus_buf, RC_ctrl_t *rc_ctrl);
 
 //remote control data 
-//Ò£¿ØÆ÷¿ØÖÆ±äÁ¿
+//é¥æ§å™¨æ§åˆ¶å˜é‡
 RC_ctrl_t rc_ctrl;
 
 rc_info_t rc_ctrl1;
 
 //receive data, 18 bytes one frame, but set 36 bytes 
-//½ÓÊÕÔ­Ê¼Êı¾İ£¬Îª18¸ö×Ö½Ú£¬¸øÁË36¸ö×Ö½Ú³¤¶È£¬·ÀÖ¹DMA´«ÊäÔ½½ç
+//æ¥æ”¶åŸå§‹æ•°æ®ï¼Œä¸º18ä¸ªå­—èŠ‚ï¼Œç»™äº†36ä¸ªå­—èŠ‚é•¿åº¦ï¼Œé˜²æ­¢DMAä¼ è¾“è¶Šç•Œ
 static uint8_t sbus_rx_buf[2][SBUS_RX_BUF_NUM];
 void Sbus_Data_Count(rc_info_t *rc, uint8_t *sbusData);
 
@@ -100,7 +99,7 @@ void Sbus_Data_Count(rc_info_t *rc, uint8_t *sbusData);
   * @retval         none
   */
 /**
-  * @brief          Ò£¿ØÆ÷³õÊ¼»¯
+  * @brief          é¥æ§å™¨åˆå§‹åŒ–
   * @param[in]      none
   * @retval         none
   */
@@ -114,9 +113,9 @@ void remote_control_init(void)
   * @retval         remote control data point
   */
 /**
-  * @brief          »ñÈ¡Ò£¿ØÆ÷Êı¾İÖ¸Õë
+  * @brief          è·å–é¥æ§å™¨æ•°æ®æŒ‡é’ˆ
   * @param[in]      none
-  * @retval         Ò£¿ØÆ÷Êı¾İÖ¸Õë
+  * @retval         é¥æ§å™¨æ•°æ®æŒ‡é’ˆ
   */
 const RC_ctrl_t *get_remote_control_point(void)
 {
@@ -124,10 +123,10 @@ const RC_ctrl_t *get_remote_control_point(void)
 }
 
 
-//´®¿ÚÖĞ¶Ï
+//ä¸²å£ä¸­æ–­
 void USART3_IRQHandler(void)
 {
-    if(huart3.Instance->SR & UART_FLAG_RXNE)//½ÓÊÕµ½Êı¾İ
+    if(huart3.Instance->SR & UART_FLAG_RXNE)//æ¥æ”¶åˆ°æ•°æ®
     {
         __HAL_UART_CLEAR_PEFLAG(&huart3);
     }
@@ -142,23 +141,23 @@ void USART3_IRQHandler(void)
             /* Current memory buffer used is Memory 0 */
     
             //disable DMA
-            //Ê§Ğ§DMA
+            //å¤±æ•ˆDMA
             __HAL_DMA_DISABLE(&hdma_usart3_rx);
 
             //get receive data length, length = set_data_length - remain_length
-            //»ñÈ¡½ÓÊÕÊı¾İ³¤¶È,³¤¶È = Éè¶¨³¤¶È - Ê£Óà³¤¶È
+            //è·å–æ¥æ”¶æ•°æ®é•¿åº¦,é•¿åº¦ = è®¾å®šé•¿åº¦ - å‰©ä½™é•¿åº¦
             this_time_rx_len = SBUS_RX_BUF_NUM - hdma_usart3_rx.Instance->NDTR;
 
             //reset set_data_lenght
-            //ÖØĞÂÉè¶¨Êı¾İ³¤¶È
+            //é‡æ–°è®¾å®šæ•°æ®é•¿åº¦
             hdma_usart3_rx.Instance->NDTR = SBUS_RX_BUF_NUM;
 
             //set memory buffer 1
-            //Éè¶¨»º³åÇø1
+            //è®¾å®šç¼“å†²åŒº1
             hdma_usart3_rx.Instance->CR |= DMA_SxCR_CT;
             
             //enable DMA
-            //Ê¹ÄÜDMA
+            //ä½¿èƒ½DMA
             __HAL_DMA_ENABLE(&hdma_usart3_rx);
 
             if(this_time_rx_len == RC_FRAME_LENGTH)
@@ -171,28 +170,28 @@ void USART3_IRQHandler(void)
         {
             /* Current memory buffer used is Memory 1 */
             //disable DMA
-            //Ê§Ğ§DMA
+            //å¤±æ•ˆDMA
             __HAL_DMA_DISABLE(&hdma_usart3_rx);
 
             //get receive data length, length = set_data_length - remain_length
-            //»ñÈ¡½ÓÊÕÊı¾İ³¤¶È,³¤¶È = Éè¶¨³¤¶È - Ê£Óà³¤¶È
+            //è·å–æ¥æ”¶æ•°æ®é•¿åº¦,é•¿åº¦ = è®¾å®šé•¿åº¦ - å‰©ä½™é•¿åº¦
             this_time_rx_len = SBUS_RX_BUF_NUM - hdma_usart3_rx.Instance->NDTR;
 
             //reset set_data_lenght
-            //ÖØĞÂÉè¶¨Êı¾İ³¤¶È
+            //é‡æ–°è®¾å®šæ•°æ®é•¿åº¦
             hdma_usart3_rx.Instance->NDTR = SBUS_RX_BUF_NUM;
 
             //set memory buffer 0
-            //Éè¶¨»º³åÇø0
+            //è®¾å®šç¼“å†²åŒº0
             DMA1_Stream1->CR &= ~(DMA_SxCR_CT);
             
             //enable DMA
-            //Ê¹ÄÜDMA
+            //ä½¿èƒ½DMA
             __HAL_DMA_ENABLE(&hdma_usart3_rx);
 
             if(this_time_rx_len == RC_FRAME_LENGTH)
             {
-                //´¦ÀíÒ£¿ØÆ÷Êı¾İ
+                //å¤„ç†é¥æ§å™¨æ•°æ®
                 //sbus_to_rc(sbus_rx_buf[1], &rc_ctrl);
                 Sbus_Data_Count(&rc_ctrl1,sbus_rx_buf[1]);
             }
@@ -208,9 +207,9 @@ void USART3_IRQHandler(void)
   * @retval         none
   */
 /**
-  * @brief          Ò£¿ØÆ÷Ğ­Òé½âÎö
-  * @param[in]      sbus_buf: Ô­ÉúÊı¾İÖ¸Õë
-  * @param[out]     rc_ctrl: Ò£¿ØÆ÷Êı¾İÖ¸
+  * @brief          é¥æ§å™¨åè®®è§£æ
+  * @param[in]      sbus_buf: åŸç”Ÿæ•°æ®æŒ‡é’ˆ
+  * @param[out]     rc_ctrl: é¥æ§å™¨æ•°æ®æŒ‡
   * @retval         none
   */
 static void sbus_to_rc(volatile const uint8_t *sbus_buf, RC_ctrl_t *rc_ctrl)
