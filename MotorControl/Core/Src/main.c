@@ -104,6 +104,12 @@ int main(void)
   /* USER CODE BEGIN 2 */
 	HAL_CAN_Start(&hcan1);
 	HAL_CAN_Start(&hcan2);
+	
+	can_tx.StdId = 0x01;
+	can_tx.ExtId = 0x01;
+	can_tx.IDE = 0;
+	can_tx.RTR = 0;
+	can_tx.DLC = 8;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -118,22 +124,24 @@ int main(void)
 			cdc_receive = 0;
 
 			// send command to can
-			can_tx.StdId = 0x01;
-			can_tx.ExtId = 0x01;
-			can_tx.IDE = 0;
-			can_tx.RTR = 0;
-			can_tx.DLC = 8;
+			//can_tx.StdId = 0x01;
+			//can_tx.ExtId = 0x01;
+			//can_tx.IDE = 0;
+			//can_tx.RTR = 0;
+			//can_tx.DLC = 8;
 
 			//CDC_Transmit_FS(Buf, *Len);
 
-			HAL_CAN_AddTxMessage(&hcan1, &can_tx, cdc_data, &can_tx_mailbox);
-			HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &can_rx, can_data);
+			//HAL_CAN_AddTxMessage(&hcan1, &can_tx, cdc_data, &can_tx_mailbox);
+			//HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &can_rx, can_data);
 
-			CDC_Transmit_FS(can_data, can_rx.DLC);
+			//CDC_Transmit_FS(can_data, can_rx.DLC);
+			
+			HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_0);
 		}
 
-		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_0);
-    HAL_Delay(100);
+		//HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_0);
+    HAL_Delay(1);
   }
   /* USER CODE END 3 */
 }

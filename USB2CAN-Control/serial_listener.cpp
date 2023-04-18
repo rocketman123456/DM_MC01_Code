@@ -34,10 +34,12 @@ void MotorListener::onReadEvent(const char* portName, unsigned int readBufferLen
             if (recLen > 0)
             {
                 data[recLen] = '\0';
-                std::cout << portName << " - Count: " << ++countRead << ", Length: " << recLen << ", Str: " << data
+                std::cout << portName << " - Count: " << ++countRead << ", Len: " << recLen << ", Str: " << data
                           << ", Hex: " << char2hexstr(data, recLen).c_str() << std::endl;
 
-                //unpack_reply((uint8_t*)data, recLen, &state);
+                // get motor state
+                unpack_reply((uint8_t*)data, recLen, &state);
+                std::cout << "Pos: " << state.a.p << "Vel: " << state.a.v << "Tau: " << state.a.t << std::endl;
                 // send next control
                 pack_cmd(hex, 8, control);
                 p_sp->writeData(hex, 8);

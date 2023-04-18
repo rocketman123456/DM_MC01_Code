@@ -21,7 +21,7 @@
 #include "can.h"
 
 /* USER CODE BEGIN 0 */
-
+#include "usbd_cdc_if.h"
 /* USER CODE END 0 */
 
 CAN_HandleTypeDef hcan1;
@@ -236,5 +236,12 @@ void HAL_CAN_MspDeInit(CAN_HandleTypeDef* canHandle)
 }
 
 /* USER CODE BEGIN 1 */
-
+void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
+{
+  if(HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &can_rx, can_data) == HAL_OK)
+	{
+		can_data[5] = can_rx.StdId;
+		CDC_Transmit_FS(can_data, 6);
+	}
+}
 /* USER CODE END 1 */

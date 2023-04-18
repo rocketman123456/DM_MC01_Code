@@ -271,12 +271,6 @@ static int8_t CDC_Receive_FS(uint8_t* Buf, uint32_t *Len)
 	cdc_receive = 1;
 
 	// send command to can
-	//can_tx.StdId = 0x01;
-	//can_tx.ExtId = 0x01;
-	//can_tx.IDE = 0;
-	//can_tx.RTR = 0;
-	//can_tx.DLC = 8;
-
 	CDC_Transmit_FS(Buf, *Len);
 
 	//HAL_CAN_AddTxMessage(&hcan1, &can_tx, Buf, &can_tx_mailbox);
