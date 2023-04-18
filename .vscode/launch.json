@@ -1,0 +1,28 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "(windows) control",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/USB2CAN-Control/Debug/control.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/build",
+            "environment": [],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "(macosx) control",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/USB2CAN-Control/Debug/PiccoloEditor",
+            "args": [],
+            "cwd": "${workspaceFolder}/build",
+            "terminal": "integrated"
+        }
+    ]
+}
