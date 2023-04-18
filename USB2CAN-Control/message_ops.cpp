@@ -2,6 +2,18 @@
 
 #include "math_ops.h"
 
+void zero_msg(uint8_t* msg, int32_t len)
+{
+    msg[0] = 0xFF;
+    msg[1] = 0xFF;
+    msg[2] = 0xFF;
+    msg[3] = 0xFF;
+    msg[4] = 0xFF;
+    msg[5] = 0xFF;
+    msg[6] = 0xFF;
+    msg[7] = 0xFE;
+}
+
 void enter_motor_mode(uint8_t* msg, int32_t len)
 {
     msg[0] = 0xFF;
@@ -42,7 +54,7 @@ void exit_motor_mode(uint8_t* msg, int32_t len)
 // 5: [kd[11-4]]
 // 6: [kd[3-0], torque[11-8]]
 // 7: [torque[7-0]]
-void pack_cmd(uint8_t* msg, int32_t len, joint_control joint)
+void pack_cmd(uint8_t* msg, int32_t len, joint_control& joint)
 {
     /// limit data to be within bounds ///
     float p_des = fminf(fmaxf(P_MIN, joint.p_des), P_MAX);

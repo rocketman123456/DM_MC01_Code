@@ -24,7 +24,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "usbd_cdc_if.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -44,7 +44,13 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+volatile char cdc_receive = 0;
+volatile char can_receive = 0;
 
+char cdc_data[16];
+int cdc_len = 0;
+char can_data[16];
+int can_len = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -90,7 +96,8 @@ int main(void)
   MX_CAN2_Init();
   MX_USB_DEVICE_Init();
   /* USER CODE BEGIN 2 */
-
+	HAL_CAN_Start(&hcan1);
+	HAL_CAN_Start(&hcan2);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -100,6 +107,9 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+		//CDC_Transmit_FS((uint8_t*)"USB CDC Hello!\n", 15);
+		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_0);
+    HAL_Delay(100);
   }
   /* USER CODE END 3 */
 }

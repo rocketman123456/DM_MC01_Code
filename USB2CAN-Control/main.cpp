@@ -1,7 +1,9 @@
 // main.cpp
 
-#include "CSerialPort/SerialPort.h"
-#include "CSerialPort/SerialPortInfo.h"
+#include "serial_listener.h"
+
+#include "leg_message.h"
+#include "message_ops.h"
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -12,68 +14,15 @@
 #endif
 
 #include <iostream>
-#include <string>
 
 using namespace itas109;
-
-std::string char2hexstr(const char* str, int len)
-{
-    static const char hexTable[17] = "0123456789ABCDEF";
-
-    std::string result;
-    for (int i = 0; i < len; ++i)
-    {
-        result += "0x";
-        result += hexTable[(unsigned char)str[i] / 16];
-        result += hexTable[(unsigned char)str[i] % 16];
-        result += " ";
-    }
-    return result;
-}
-
-class MyListener : public CSerialPortListener
-{
-public:
-    MyListener(CSerialPort* sp) : p_sp(sp) {};
-
-    void onReadEvent(const char* portName, unsigned int readBufferLen)
-    {
-        if (readBufferLen > 0)
-        {
-            char* data = new char[readBufferLen + 1]; // '\0'
-
-            if (data)
-            {
-                // read
-                int recLen = p_sp->readData(data, readBufferLen);
-
-                if (recLen > 0)
-                {
-                    data[recLen] = '\0';
-                    std::cout << portName << " - Count: " << ++countRead << ", Length: " << recLen << ", Str: " << data
-                              << ", Hex: " << char2hexstr(data, recLen).c_str() << std::endl;
-
-                    // return receive data
-                    // p_sp->writeData(data, recLen);
-                }
-
-                delete[] data;
-                data = NULL;
-            }
-        }
-    };
-
-private:
-    CSerialPort* p_sp;
-    int          countRead = 0;
-};
 
 int main()
 {
     CSerialPort sp;
     std::cout << "Version: " << sp.getVersion() << std::endl << std::endl;
 
-    MyListener listener(&sp);
+    MotorListener listener(&sp);
 
     std::vector<SerialPortInfo> m_availablePortsList = CSerialPortInfo::availablePortInfos();
 
@@ -125,17 +74,22 @@ int main()
         // connect for read
         sp.connectReadEvent(&listener);
 
-        // write hex data
-        char hex[5];
-        hex[0] = 0x31;
-        hex[1] = 0x32;
-        hex[2] = 0x33;
-        hex[3] = 0x34;
-        hex[4] = 0x35;
+        // enter motor mode
+        uint8_t hex[8];
+        enter_motor_mode(hex, 8);
         sp.writeData(hex, sizeof(hex));
 
+        joint_control control;
+        control.p_des = 0;
+        control.v_des = 0;
+        control.t_ff = 0;
+        control.kp = 0;
+        control.kd = 0;
+
+        pack_cmd(hex, 8, control);
+
         // write str data
-        sp.writeData("itas109", 7);
+        // sp.writeData("itas109", 7);
 
         for (;;)
         {

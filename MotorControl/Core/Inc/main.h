@@ -41,7 +41,8 @@ extern "C" {
 
 /* Exported constants --------------------------------------------------------*/
 /* USER CODE BEGIN EC */
-
+extern volatile char cdc_receive;
+extern volatile char can_receive;
 /* USER CODE END EC */
 
 /* Exported macro ------------------------------------------------------------*/
