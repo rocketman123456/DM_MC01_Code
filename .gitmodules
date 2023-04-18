@@ -1,0 +1,6 @@
+[submodule "3rdParty/serial"]
+	path = 3rdParty/serial
+	url = https://github.com/wjwwood/serial.git
+[submodule "3rdParty/CSerialPort"]
+	path = 3rdParty/CSerialPort
+	url = https://github.com/itas109/CSerialPort.git
