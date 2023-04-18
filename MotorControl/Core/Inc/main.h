@@ -43,6 +43,17 @@ extern "C" {
 /* USER CODE BEGIN EC */
 extern volatile char cdc_receive;
 extern volatile char can_receive;
+
+extern uint8_t cdc_data[16];
+extern int cdc_len;
+extern uint8_t can_data[16];
+extern int can_len;
+
+extern CAN_TxHeaderTypeDef can_tx;
+extern uint32_t can_tx_mailbox;
+
+extern CAN_RxHeaderTypeDef can_rx;
+extern uint32_t can_rx_mailbox;
 /* USER CODE END EC */
 
 /* Exported macro ------------------------------------------------------------*/

@@ -47,10 +47,16 @@
 volatile char cdc_receive = 0;
 volatile char can_receive = 0;
 
-char cdc_data[16];
+uint8_t cdc_data[16];
 int cdc_len = 0;
-char can_data[16];
+uint8_t can_data[16];
 int can_len = 0;
+
+CAN_TxHeaderTypeDef can_tx;
+uint32_t can_tx_mailbox = 0;
+
+CAN_RxHeaderTypeDef can_rx;
+uint32_t can_rx_mailbox = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -107,7 +113,25 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-		//CDC_Transmit_FS((uint8_t*)"USB CDC Hello!\n", 15);
+		if(cdc_receive == 1)
+		{
+			cdc_receive = 0;
+
+			// send command to can
+			can_tx.StdId = 0x01;
+			can_tx.ExtId = 0x01;
+			can_tx.IDE = 0;
+			can_tx.RTR = 0;
+			can_tx.DLC = 8;
+
+			//CDC_Transmit_FS(Buf, *Len);
+
+			HAL_CAN_AddTxMessage(&hcan1, &can_tx, cdc_data, &can_tx_mailbox);
+			HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &can_rx, can_data);
+
+			CDC_Transmit_FS(can_data, can_rx.DLC);
+		}
+
 		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_0);
     HAL_Delay(100);
   }

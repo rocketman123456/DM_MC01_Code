@@ -263,9 +263,26 @@ static int8_t CDC_Control_FS(uint8_t cmd, uint8_t* pbuf, uint16_t length)
 static int8_t CDC_Receive_FS(uint8_t* Buf, uint32_t *Len)
 {
   /* USER CODE BEGIN 6 */
-	cdc_receive = 1;
   USBD_CDC_SetRxBuffer(&hUsbDeviceFS, &Buf[0]);
   USBD_CDC_ReceivePacket(&hUsbDeviceFS);
+	
+	memcpy(cdc_data, Buf, *Len);
+	
+	cdc_receive = 1;
+
+	// send command to can
+	//can_tx.StdId = 0x01;
+	//can_tx.ExtId = 0x01;
+	//can_tx.IDE = 0;
+	//can_tx.RTR = 0;
+	//can_tx.DLC = 8;
+
+	CDC_Transmit_FS(Buf, *Len);
+
+	//HAL_CAN_AddTxMessage(&hcan1, &can_tx, Buf, &can_tx_mailbox);
+	//HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &can_rx, can_data);
+	//CDC_Transmit_FS(can_data, can_rx.DLC);
+	
   return (USBD_OK);
   /* USER CODE END 6 */
 }
