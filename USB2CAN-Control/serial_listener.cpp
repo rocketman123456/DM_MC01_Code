@@ -1,4 +1,5 @@
 #include "serial_listener.h"
+#include "message_ops.h"
 
 #include <iostream>
 
@@ -36,8 +37,10 @@ void MotorListener::onReadEvent(const char* portName, unsigned int readBufferLen
                 std::cout << portName << " - Count: " << ++countRead << ", Length: " << recLen << ", Str: " << data
                           << ", Hex: " << char2hexstr(data, recLen).c_str() << std::endl;
 
-                // return receive data
-                // p_sp->writeData(data, recLen);
+                //unpack_reply((uint8_t*)data, recLen, &state);
+                // send next control
+                pack_cmd(hex, 8, control);
+                p_sp->writeData(hex, 8);
             }
 
             delete[] data;
