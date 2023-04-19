@@ -75,16 +75,23 @@ int main()
 
         // enter motor mode
         uint8_t hex[8];
+        std::cout << "enter motor mode" << std::endl;
         enter_motor_mode(hex, 8);
         sp.writeData(hex, sizeof(hex));
+
+        imsleep(1);
 
         listener.control.p_des = 0;
         listener.control.v_des = 0;
         listener.control.t_ff = 0;
-        listener.control.kp = 0;
+        listener.control.kp = 15.0;
         listener.control.kd = 0;
 
         pack_cmd(hex, 8, listener.control);
+
+        auto hex_str = char2hexstr((char*)hex, 8);
+        std::cout << hex_str << std::endl;
+
         sp.writeData(hex, sizeof(hex));
 
         for (;;)

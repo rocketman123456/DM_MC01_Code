@@ -1,6 +1,21 @@
-#include "leg_message.h"
+#include "message_ops.h"
 
 #include "math_ops.h"
+
+std::string char2hexstr(const char* str, int len)
+{
+    static const char hexTable[17] = "0123456789ABCDEF";
+
+    std::string result;
+    for (int i = 0; i < len; ++i)
+    {
+        result += "0x";
+        result += hexTable[(unsigned char)str[i] / 16];
+        result += hexTable[(unsigned char)str[i] % 16];
+        result += " ";
+    }
+    return result;
+}
 
 void zero_msg(uint8_t* msg, int32_t len)
 {
@@ -85,19 +100,19 @@ void pack_cmd(uint8_t* msg, int32_t len, joint_control& joint)
 // 12 bit current, between -40 and 40;
 // CAN Packet is 5 8-bit words
 // Formatted as follows.  For each quantity, bit 0 is LSB
-// 0: [position[15-8]]
-// 1: [position[7-0]]
-// 2: [velocity[11-4]]
-// 3: [velocity[3-0], current[11-8]]
-// 4: [current[7-0]]
-// 5: (optional)[id]
+// 0: (optional)[id]
+// 1: [position[15-8]]
+// 2: [position[7-0]]
+// 3: [velocity[11-4]]
+// 4: [velocity[3-0], current[11-8]]
+// 5: [current[7-0]]
 void unpack_reply(uint8_t* msg, int32_t len, leg_state* leg)
 {
     /// unpack ints from can buffer ///
-    uint16_t p_int = (msg[0] << 8) | msg[1];
-    uint16_t v_int = (msg[2] << 4) | (msg[3] >> 4);
-    uint16_t i_int = ((msg[3] & 0xF) << 8) | msg[4];
-    uint16_t id    = msg[5];
+    uint16_t id    = msg[0];
+    uint16_t p_int = (msg[1] << 8) | msg[2];
+    uint16_t v_int = (msg[3] << 4) | (msg[4] >> 4);
+    uint16_t i_int = ((msg[4] & 0xF) << 8) | msg[5];
     /// convert uints to floats ///
     float p = uint_to_float(p_int, P_MIN, P_MAX, 16);
     float v = uint_to_float(v_int, V_MIN, V_MAX, 12);

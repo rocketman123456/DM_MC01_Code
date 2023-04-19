@@ -271,12 +271,12 @@ static int8_t CDC_Receive_FS(uint8_t* Buf, uint32_t *Len)
 	cdc_receive = 1;
 
 	// send command to can
-	CDC_Transmit_FS(Buf, *Len);
+	//CDC_Transmit_FS(Buf, *Len);
 
-	//HAL_CAN_AddTxMessage(&hcan1, &can_tx, Buf, &can_tx_mailbox);
+	HAL_CAN_AddTxMessage(&hcan1, &can_tx, Buf, &can_tx_mailbox);
 	//HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &can_rx, can_data);
 	//CDC_Transmit_FS(can_data, can_rx.DLC);
-	
+
   return (USBD_OK);
   /* USER CODE END 6 */
 }

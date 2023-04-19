@@ -4,13 +4,6 @@
 #define RX_LEN 66
 #define TX_LEN 66
 
-// length of outgoing/incoming messages
-#define DATA_LEN 30
-#define CMD_LEN 66
-
-// Master CAN ID ///
-#define CAN_ID 0x0
-
 /// Value Limits ///
 #define P_MIN -12.5f
 #define P_MAX 12.5f

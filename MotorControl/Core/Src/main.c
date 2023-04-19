@@ -137,11 +137,11 @@ int main(void)
 
 			//CDC_Transmit_FS(can_data, can_rx.DLC);
 			
-			HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_0);
+			//HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_0);
 		}
 
 		//HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_0);
-    HAL_Delay(1);
+    HAL_Delay(100);
   }
   /* USER CODE END 3 */
 }

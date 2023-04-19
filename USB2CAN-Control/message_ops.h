@@ -2,6 +2,10 @@
 
 #include "leg_message.h"
 
+#include <string>
+
+std::string char2hexstr(const char* str, int len);
+
 void pack_cmd(uint8_t* msg, int32_t len, joint_control& joint);
 void unpack_reply(uint8_t* msg, int32_t len, leg_state* leg);
 void zero_msg(uint8_t* msg, int32_t len);

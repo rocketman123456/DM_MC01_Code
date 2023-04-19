@@ -240,8 +240,9 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 {
   if(HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &can_rx, can_data) == HAL_OK)
 	{
-		can_data[5] = can_rx.StdId;
-		CDC_Transmit_FS(can_data, 6);
+		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_0);
+		can_data[can_rx.DLC] = can_rx.StdId;
+		CDC_Transmit_FS(can_data, can_rx.DLC + 1);
 	}
 }
 /* USER CODE END 1 */
