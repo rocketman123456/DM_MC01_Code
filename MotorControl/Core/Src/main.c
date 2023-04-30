@@ -106,9 +106,9 @@ int main(void)
 	HAL_CAN_Start(&hcan2);
 	
 	can_tx.StdId = 0x01;
-	can_tx.ExtId = 0x01;
-	can_tx.IDE = 0;
-	can_tx.RTR = 0;
+	can_tx.ExtId = 0x12;
+	can_tx.IDE = CAN_ID_STD;
+	can_tx.RTR = CAN_RTR_DATA;
 	can_tx.DLC = 8;
   /* USER CODE END 2 */
 
@@ -122,13 +122,6 @@ int main(void)
 		if(cdc_receive == 1)
 		{
 			cdc_receive = 0;
-
-			// send command to can
-			//can_tx.StdId = 0x01;
-			//can_tx.ExtId = 0x01;
-			//can_tx.IDE = 0;
-			//can_tx.RTR = 0;
-			//can_tx.DLC = 8;
 
 			//CDC_Transmit_FS(Buf, *Len);
 

@@ -136,7 +136,6 @@ void pack_cmd(CANMessage* msg, joint_control joint)
 /// 2: [velocity[11-4]]
 /// 3: [velocity[3-0], current[11-8]]
 /// 4: [current[7-0]]
-
 void unpack_reply(CANMessage msg, leg_state* leg)
 {
     /// unpack ints from can buffer ///
@@ -174,11 +173,13 @@ void rxISR1()
     can1.read(rxMsg1); // read message into Rx message storage
     unpack_reply(rxMsg1, &l1_state);
 }
+
 void rxISR2()
 {
     can2.read(rxMsg2);
     unpack_reply(rxMsg2, &l2_state);
 }
+
 void PackAll()
 {
     pack_cmd(&a1_can, l1_control.a);
@@ -188,6 +189,7 @@ void PackAll()
     pack_cmd(&k1_can, l1_control.k);
     pack_cmd(&k2_can, l2_control.k);
 }
+
 void WriteAll()
 {
     // toggle = 1;
@@ -259,6 +261,7 @@ void ExitMotorMode(CANMessage* msg)
     msg->data[7] = 0xFD;
     // WriteAll();
 }
+
 void serial_isr()
 {
     /// handle keyboard commands from the serial terminal ///
@@ -357,14 +360,6 @@ void spi_isr(void)
     control();
     PackAll();
     WriteAll();
-
-    //    for (int i = 0; i<TX_LEN; i++) {
-    //        tx_buff[i] = 2*rx_buff[i];
-    //    }
-    //    for (int i=0; i<TX_LEN; i++) {
-    //        printf("%d ", rx_buff[i]);
-    //    }
-    //    printf("\n\r");
 }
 
 int softstop_joint(joint_state state, joint_control* control, float limit_p, float limit_n)
@@ -392,7 +387,6 @@ int softstop_joint(joint_state state, joint_control* control, float limit_p, flo
 
 void control()
 {
-
     if (((spi_command.flags[0] & 0x1) == 1) && (enabled == 0))
     {
         enabled = 1;
@@ -436,6 +430,7 @@ void control()
     spi_data.qd_abad[0] = l1_state.a.v;
     spi_data.qd_hip[0]  = l1_state.h.v;
     spi_data.qd_knee[0] = l1_state.k.v;
+    // TODO : torque
 
     spi_data.q_abad[1]  = l2_state.a.p;
     spi_data.q_hip[1]   = l2_state.h.p;
@@ -443,6 +438,7 @@ void control()
     spi_data.qd_abad[1] = l2_state.a.v;
     spi_data.qd_hip[1]  = l2_state.h.v;
     spi_data.qd_knee[1] = l2_state.k.v;
+    // TODO : torque
 
     if (estop == 0)
     {
@@ -453,7 +449,6 @@ void control()
         spi_data.flags[1] = 0xdead;
         led               = 1;
     }
-
     else
     {
         led = 0;
@@ -511,6 +506,7 @@ void control()
         // PackAll();
         // WriteAll();
     }
+
     spi_data.checksum = xor_checksum((uint32_t*)&spi_data, 14);
     for (int i = 0; i < DATA_LEN; i++)
     {
@@ -558,10 +554,6 @@ int main()
     pc.baud(921600);
     pc.attach(&serial_isr);
     estop.mode(PullUp);
-    // spi.format(16, 0);
-    // spi.frequency(1000000);
-    // spi.reply(0x0);
-    // cs.fall(&spi_isr);
 
     // can1.frequency(1000000);                     // set bit rate to 1Mbps
     // can1.attach(&rxISR1);                 // attach 'CAN receive-complete' interrupt handler
@@ -578,15 +570,16 @@ int main()
     // NVIC_SetPriority(CAN1_RX0_IRQn, 3);
     // NVIC_SetPriority(CAN2_RX0_IRQn, 3);
 
-    printf("\n\r SPIne\n\r");
+    // printf("\n\r SPIne\n\r");
     // printf("%d\n\r", RX_ID << 18);
 
     a1_can.len = 8; // transmit 8 bytes
     a2_can.len = 8; // transmit 8 bytes
-    h1_can.len = 8;
-    h2_can.len = 8;
-    k1_can.len = 8;
-    k2_can.len = 8;
+    h1_can.len = 8; // transmit 8 bytes
+    h2_can.len = 8; // transmit 8 bytes
+    k1_can.len = 8; // transmit 8 bytes
+    k2_can.len = 8; // transmit 8 bytes
+
     rxMsg1.len = 6; // receive 6 bytes
     rxMsg2.len = 6; // receive 6 bytes
 
@@ -625,6 +618,6 @@ int main()
         can1.read(rxMsg1); // read message into Rx message storage
         unpack_reply(rxMsg1, &l1_state);
         wait_us(10);
-		    led = !led;
+        led = !led;
     }
 }
