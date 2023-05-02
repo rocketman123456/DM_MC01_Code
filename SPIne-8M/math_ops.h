@@ -1,5 +1,5 @@
-#ifndef MATH_OPS_H
-#define MATH_OPS_H
+#ifndef _math_ops_
+#define _math_ops_
 
 #define PI 3.14159265359f
 

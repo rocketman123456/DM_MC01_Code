@@ -1,5 +1,5 @@
-#ifndef _leg_message
-#define _leg_message
+#ifndef _leg_message_
+#define _leg_message_
 
 #include <stdint.h>
 
