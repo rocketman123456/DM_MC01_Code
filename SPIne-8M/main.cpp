@@ -46,7 +46,7 @@ spi_command_t spi_command; // data from up to spine
 uint16_t rx_buff[RX_LEN];
 uint16_t tx_buff[TX_LEN];
 
-DigitalOut  (PC_5);
+DigitalOut led(PC_5);
 
 Serial pc(PA_2, PA_3);
 CAN    can1(PB_12, PB_13, 1000000); // CAN Rx pin name, CAN Tx pin name
@@ -66,7 +66,7 @@ InterruptIn cs(PA_4);
 DigitalIn   estop(PB_15);
 // SPISlave spi(PA_7, PA_6, PA_5, PA_4);
 
-leg_state l1_state, l2_state;
+leg_state   l1_state, l2_state;
 leg_control l1_control, l2_control;
 
 uint16_t x        = 0;
@@ -101,7 +101,6 @@ void control();
 
 void pack_cmd(CANMessage* msg, joint_control joint)
 {
-
     /// limit data to be within bounds ///
     float p_des = fminf(fmaxf(P_MIN, joint.p_des), P_MAX);
     float v_des = fminf(fmaxf(V_MIN, joint.v_des), V_MAX);
@@ -263,58 +262,6 @@ void ExitMotorMode(CANMessage* msg)
     // WriteAll();
 }
 
-void serial_isr()
-{
-    /// handle keyboard commands from the serial terminal ///
-    while (pc.readable())
-    {
-        char c = pc.getc();
-        // led = !led;
-        switch (c)
-        {
-            case (27):
-                // loop.detach();
-                printf("\n\r exiting motor mode \n\r");
-                ExitMotorMode(&a1_can);
-                ExitMotorMode(&a2_can);
-                ExitMotorMode(&h1_can);
-                ExitMotorMode(&h2_can);
-                ExitMotorMode(&k1_can);
-                ExitMotorMode(&k2_can);
-                enabled = 0;
-                break;
-            case ('m'):
-                printf("\n\r entering motor mode \n\r");
-                EnterMotorMode(&a1_can);
-                EnterMotorMode(&a2_can);
-                EnterMotorMode(&h1_can);
-                EnterMotorMode(&h2_can);
-                EnterMotorMode(&k1_can);
-                EnterMotorMode(&k2_can);
-                wait(.5);
-                enabled = 1;
-                // loop.attach(&sendCMD, .001);
-                break;
-            case ('s'):
-                printf("\n\r standing \n\r");
-                counter2    = 0;
-                is_standing = 1;
-                // stand();
-                break;
-            case ('z'):
-                printf("\n\r zeroing \n\r");
-                Zero(&a1_can);
-                Zero(&a2_can);
-                Zero(&h1_can);
-                Zero(&h2_can);
-                Zero(&k1_can);
-                Zero(&k2_can);
-                break;
-        }
-    }
-    WriteAll();
-}
-
 uint32_t xor_checksum(uint32_t* data, size_t len)
 {
     uint32_t t = 0;
@@ -327,8 +274,9 @@ void spi_isr(void)
 {
     GPIOC->ODR |= (1 << 8);
     GPIOC->ODR &= ~(1 << 8);
+    SPI1->DR = tx_buff[0];
+
     int bytecount = 0;
-    SPI1->DR      = tx_buff[0];
     while (cs == 0)
     {
         if (SPI1->SR & 0x1)
@@ -357,7 +305,6 @@ void spi_isr(void)
     }
 
     // test_control();
-    // spi_data.q_abad[0] = 12.0f;
     control();
     PackAll();
     WriteAll();
@@ -388,7 +335,6 @@ int softstop_joint(joint_state state, joint_control* control, float limit_p, flo
 
 void control()
 {
-
     if (((spi_command.flags[0] & 0x1) == 1) && (enabled == 0))
     {
         enabled = 1;
@@ -442,12 +388,12 @@ void control()
 
     if (estop == 0)
     {
-        // printf("estopped!!!!\n\r");
+        led = 1;
+
         memset(&l1_control, 0, sizeof(l1_control));
         memset(&l2_control, 0, sizeof(l2_control));
         spi_data.flags[0] = 0xdead;
         spi_data.flags[1] = 0xdead;
-        led               = 1;
     }
     else
     {
@@ -503,14 +449,10 @@ void control()
 
         // spi_data.flags[0] = 0xbeef;
         // spi_data.flags[1] = 0xbeef;
-        // PackAll();
-        // WriteAll();
     }
     spi_data.checksum = xor_checksum((uint32_t*)&spi_data, 14);
-    for (int i = 0; i < DATA_LEN; i++)
-    {
-        tx_buff[i] = ((uint16_t*)(&spi_data))[i];
-    }
+
+    memcpy(tx_buff, &spi_data, sizeof(spi_data_t));
 }
 
 void test_control()
@@ -551,12 +493,7 @@ int main()
     wait(1);
     // led = 1;
     pc.baud(921600);
-    pc.attach(&serial_isr);
     estop.mode(PullUp);
-    // spi.format(16, 0);
-    // spi.frequency(1000000);
-    // spi.reply(0x0);
-    // cs.fall(&spi_isr);
 
     // can1.frequency(1000000);              // set bit rate to 1Mbps
     // can1.attach(&rxISR1);                 // attach 'CAN receive-complete' interrupt handler
@@ -591,13 +528,13 @@ int main()
     k1_can.id = 0x3;
     k2_can.id = 0x3;
 
-    // pack_cmd(&a1_can, l1_control.a);
-    // pack_cmd(&a2_can, l2_control.a);
-    // pack_cmd(&h1_can, l1_control.h);
-    // pack_cmd(&h2_can, l2_control.h);
-    // pack_cmd(&k1_can, l1_control.k);
-    // pack_cmd(&k2_can, l2_control.k);
-    // WriteAll();
+    pack_cmd(&a1_can, l1_control.a);
+    pack_cmd(&a2_can, l2_control.a);
+    pack_cmd(&h1_can, l1_control.h);
+    pack_cmd(&h2_can, l2_control.h);
+    pack_cmd(&k1_can, l1_control.k);
+    pack_cmd(&k2_can, l2_control.k);
+    WriteAll();
 
     // SPI doesn't work if enabled while the CS pin is pulled low
     // Wait for CS to not be low, then enable SPI
@@ -619,6 +556,8 @@ int main()
         init_spi();
         spi_enabled = 1;
     }
+
+    led = 1;
 
     while (1)
     {
