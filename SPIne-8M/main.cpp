@@ -34,7 +34,7 @@
 #define K_LIM_P 0.2f
 #define K_LIM_N 7.7f
 #define KP_SOFTSTOP 100.0f
-#define KD_SOFTSTOP 0.4f;
+#define KD_SOFTSTOP 0.4f
 
 #define ENABLE_CMD 0xFFFF
 #define DISABLE_CMD 0x1F1F
@@ -54,8 +54,9 @@ CAN can2(PB_8, PB_9, 1000000);   // CAN Rx pin name, CAN Tx pin name
 CANMessage rxMsg1, rxMsg2;
 CANMessage txMsg1, txMsg2;
 CANMessage a1_can, a2_can, h1_can, h2_can, k1_can, k2_can; // TX Messages
-int        ledState, led_count = 0;
-int        counter = 0;
+
+int led_count = 0;
+int counter   = 0;
 
 int         spi_enabled = 0;
 InterruptIn cs(PA_4);
@@ -118,13 +119,14 @@ void pack_cmd(CANMessage* msg, joint_control joint)
 /// 16 bit position, between -4*pi and 4*pi
 /// 12 bit velocity, between -30 and + 30 rad/s
 /// 12 bit current, between -40 and 40;
-/// CAN Packet is 5 8-bit words
+/// CAN Packet is 6 8-bit words
 /// Formatted as follows.  For each quantity, bit 0 is LSB
-/// 0: [position[15-8]]
-/// 1: [position[7-0]]
-/// 2: [velocity[11-4]]
-/// 3: [velocity[3-0], current[11-8]]
-/// 4: [current[7-0]]
+/// 0: [id]
+/// 1: [position[15-8]]
+/// 2: [position[7-0]]
+/// 3: [velocity[11-4]]
+/// 4: [velocity[3-0], current[11-8]]
+/// 5: [current[7-0]]
 void unpack_reply(CANMessage msg, leg_state* leg)
 {
     /// unpack ints from can buffer ///

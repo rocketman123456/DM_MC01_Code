@@ -65,8 +65,10 @@ struct leg_state
 {
     joint_state a, h, k;
 };
+
 struct leg_control
 {
     joint_control a, h, k;
 };
+
 #endif
