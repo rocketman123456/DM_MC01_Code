@@ -8,7 +8,7 @@
 #define TX_LEN 66
 
 // length of outgoing/incoming messages
-#define DATA_LEN 30
+#define DATA_LEN 42
 #define CMD_LEN 66
 
 // Master CAN ID ///
@@ -48,38 +48,29 @@ uint16_t tx_buff[TX_LEN];
 
 DigitalOut led(PC_5);
 
-Serial pc(PA_2, PA_3);
-CAN    can1(PB_12, PB_13, 1000000); // CAN Rx pin name, CAN Tx pin name
-CAN    can2(PB_8, PB_9, 1000000);   // CAN Rx pin name, CAN Tx pin name
+CAN can1(PB_12, PB_13, 1000000); // CAN Rx pin name, CAN Tx pin name
+CAN can2(PB_8, PB_9, 1000000);   // CAN Rx pin name, CAN Tx pin name
 
-CANMessage    rxMsg1, rxMsg2;
-CANMessage    txMsg1, txMsg2;
-CANMessage    a1_can, a2_can, h1_can, h2_can, k1_can, k2_can; // TX Messages
-int           ledState, led_count = 0;
-Ticker        sendCAN;
-int           counter      = 0;
-volatile bool msgAvailable = false;
-Ticker        loop;
+CANMessage rxMsg1, rxMsg2;
+CANMessage txMsg1, txMsg2;
+CANMessage a1_can, a2_can, h1_can, h2_can, k1_can, k2_can; // TX Messages
+int        ledState, led_count = 0;
+int        counter = 0;
 
 int         spi_enabled = 0;
 InterruptIn cs(PA_4);
 DigitalIn   estop(PB_15);
-// SPISlave spi(PA_7, PA_6, PA_5, PA_4);
 
 leg_state   l1_state, l2_state;
 leg_control l1_control, l2_control;
 
-uint16_t x        = 0;
-uint16_t x2       = 0;
-uint16_t count    = 0;
-uint16_t counter2 = 0;
-
-int control_mode = 1;
-int is_standing  = 0;
-int enabled      = 0;
+// int control_mode = 1;
+// int is_standing  = 0;
+int enabled = 0;
 
 // generates fake spi data from spi command
 void test_control();
+// generates true spi data from spi command
 void control();
 
 /// CAN Command Packet Structure ///
@@ -98,7 +89,6 @@ void control();
 /// 5: [kd[11-4]]
 /// 6: [kd[3-0], torque[11-8]]
 /// 7: [torque[7-0]]
-
 void pack_cmd(CANMessage* msg, joint_control joint)
 {
     /// limit data to be within bounds ///
@@ -135,7 +125,6 @@ void pack_cmd(CANMessage* msg, joint_control joint)
 /// 2: [velocity[11-4]]
 /// 3: [velocity[3-0], current[11-8]]
 /// 4: [current[7-0]]
-
 void unpack_reply(CANMessage msg, leg_state* leg)
 {
     /// unpack ints from can buffer ///
@@ -168,18 +157,6 @@ void unpack_reply(CANMessage msg, leg_state* leg)
     }
 }
 
-void rxISR1()
-{
-    can1.read(rxMsg1); // read message into Rx message storage
-    unpack_reply(rxMsg1, &l1_state);
-}
-
-void rxISR2()
-{
-    can2.read(rxMsg2);
-    unpack_reply(rxMsg2, &l2_state);
-}
-
 void PackAll()
 {
     pack_cmd(&a1_can, l1_control.a);
@@ -192,7 +169,6 @@ void PackAll()
 
 void WriteAll()
 {
-    // toggle = 1;
     can1.write(a1_can);
     wait(.00002);
     can2.write(a2_can);
@@ -205,22 +181,6 @@ void WriteAll()
     wait(.00002);
     can2.write(k2_can);
     wait(.00002);
-    // toggle = 0;
-}
-
-void sendCMD()
-{
-    counter++;
-
-    PackAll();
-
-    if (counter > 100)
-    {
-        printf("%.3f %.3f %.3f   %.3f %.3f %.3f\n\r", l1_state.a.p, l1_state.h.p, l1_state.k.p, l2_state.a.p, l2_state.h.p, l2_state.k.p);
-        counter = 0;
-    }
-
-    WriteAll();
 }
 
 void Zero(CANMessage* msg)
@@ -233,7 +193,6 @@ void Zero(CANMessage* msg)
     msg->data[5] = 0xFF;
     msg->data[6] = 0xFF;
     msg->data[7] = 0xFE;
-    WriteAll();
 }
 
 void EnterMotorMode(CANMessage* msg)
@@ -246,7 +205,6 @@ void EnterMotorMode(CANMessage* msg)
     msg->data[5] = 0xFF;
     msg->data[6] = 0xFF;
     msg->data[7] = 0xFC;
-    // WriteAll();
 }
 
 void ExitMotorMode(CANMessage* msg)
@@ -259,7 +217,6 @@ void ExitMotorMode(CANMessage* msg)
     msg->data[5] = 0xFF;
     msg->data[6] = 0xFF;
     msg->data[7] = 0xFD;
-    // WriteAll();
 }
 
 uint32_t xor_checksum(uint32_t* data, size_t len)
@@ -304,10 +261,17 @@ void spi_isr(void)
         spi_data.flags[1] = 0xdead;
     }
 
-    // test_control();
-    control();
-    PackAll();
-    WriteAll();
+    bool is_test = true;
+    if (is_test)
+    {
+        test_control();
+    }
+    else
+    {
+        control();
+        PackAll();
+        WriteAll();
+    }
 }
 
 int softstop_joint(joint_state state, joint_control* control, float limit_p, float limit_n)
@@ -350,7 +314,6 @@ void control()
         can1.write(h1_can);
         EnterMotorMode(&h2_can);
         can2.write(h2_can);
-        printf("e\n\r");
         return;
     }
     else if ((((spi_command.flags[0] & 0x1)) == 0) && (enabled == 1))
@@ -368,23 +331,28 @@ void control()
         can1.write(k1_can);
         ExitMotorMode(&k2_can);
         can2.write(k2_can);
-        printf("x\n\r");
         return;
     }
 
-    spi_data.q_abad[0]  = l1_state.a.p;
-    spi_data.q_hip[0]   = l1_state.h.p;
-    spi_data.q_knee[0]  = l1_state.k.p;
-    spi_data.qd_abad[0] = l1_state.a.v;
-    spi_data.qd_hip[0]  = l1_state.h.v;
-    spi_data.qd_knee[0] = l1_state.k.v;
+    spi_data.q_abad[0]   = l1_state.a.p;
+    spi_data.q_hip[0]    = l1_state.h.p;
+    spi_data.q_knee[0]   = l1_state.k.p;
+    spi_data.qd_abad[0]  = l1_state.a.v;
+    spi_data.qd_hip[0]   = l1_state.h.v;
+    spi_data.qd_knee[0]  = l1_state.k.v;
+    spi_data.tau_abad[0] = l1_state.a.t;
+    spi_data.tau_hip[0]  = l1_state.h.t;
+    spi_data.tau_knee[0] = l1_state.k.t;
 
-    spi_data.q_abad[1]  = l2_state.a.p;
-    spi_data.q_hip[1]   = l2_state.h.p;
-    spi_data.q_knee[1]  = l2_state.k.p;
-    spi_data.qd_abad[1] = l2_state.a.v;
-    spi_data.qd_hip[1]  = l2_state.h.v;
-    spi_data.qd_knee[1] = l2_state.k.v;
+    spi_data.q_abad[1]   = l2_state.a.p;
+    spi_data.q_hip[1]    = l2_state.h.p;
+    spi_data.q_knee[1]   = l2_state.k.p;
+    spi_data.qd_abad[1]  = l2_state.a.v;
+    spi_data.qd_hip[1]   = l2_state.h.v;
+    spi_data.qd_knee[1]  = l2_state.k.v;
+    spi_data.tau_abad[1] = l2_state.a.t;
+    spi_data.tau_hip[1]  = l2_state.h.t;
+    spi_data.tau_knee[1] = l2_state.k.t;
 
     if (estop == 0)
     {
@@ -469,13 +437,12 @@ void test_control()
     }
 
     spi_data.flags[0] = 0xdead;
-    // spi_data.flags[1] = 0xbeef;
+    spi_data.flags[1] = 0xbeef;
 
     // only do first 56 bytes of message.
     spi_data.checksum = xor_checksum((uint32_t*)&spi_data, 14);
 
-    for (int i = 0; i < DATA_LEN; i++)
-        tx_buff[i] = ((uint16_t*)(&spi_data))[i];
+    memcpy(tx_buff, &spi_data, sizeof(spi_data_t));
 }
 
 void init_spi(void)
@@ -485,14 +452,13 @@ void init_spi(void)
     spi->frequency(12000000);
     spi->reply(0x0);
     cs.fall(&spi_isr);
-    printf("done\n\r");
 }
 
 int main()
 {
+    led = 1;
     wait(1);
-    // led = 1;
-    pc.baud(921600);
+    led = 0;
     estop.mode(PullUp);
 
     // can1.frequency(1000000);              // set bit rate to 1Mbps
@@ -507,10 +473,6 @@ int main()
     memset(&spi_command, 0, sizeof(spi_command_t));
 
     NVIC_SetPriority(TIM5_IRQn, 1);
-    // NVIC_SetPriority(CAN1_RX0_IRQn, 3);
-    // NVIC_SetPriority(CAN2_RX0_IRQn, 3);
-
-    printf("\n\r SPIne\n\r");
 
     a1_can.len = 8; // transmit 8 bytes
     a2_can.len = 8; // transmit 8 bytes
@@ -518,6 +480,7 @@ int main()
     h2_can.len = 8;
     k1_can.len = 8;
     k2_can.len = 8;
+
     rxMsg1.len = 6; // receive 6 bytes
     rxMsg2.len = 6; // receive 6 bytes
 
@@ -544,13 +507,9 @@ int main()
         {
             wait_us(10);
             led_count++;
-            if (led_count % 5000 == 0)
+            if (led_count % 1000 == 0)
             {
-                led = 1;
-            }
-            if (led_count % 5000 == 999)
-            {
-                led = 0;
+                led = !led;
             }
         }
         init_spi();
@@ -562,6 +521,11 @@ int main()
     while (1)
     {
         counter++;
+        if (led_count % 1000 == 0)
+        {
+            led = !led;
+        }
+
         can2.read(rxMsg2); // read message into Rx message storage
         unpack_reply(rxMsg2, &l2_state);
         can1.read(rxMsg1); // read message into Rx message storage
