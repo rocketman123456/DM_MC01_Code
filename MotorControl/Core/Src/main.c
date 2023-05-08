@@ -25,6 +25,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "usbd_cdc_if.h"
+#include "bsp_dm4310.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -67,7 +68,7 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+Motor_MIT_Data_t dm43_mit_t;
 /* USER CODE END 0 */
 
 /**
@@ -104,16 +105,27 @@ int main(void)
   /* USER CODE BEGIN 2 */
 	HAL_CAN_Start(&hcan1);
 	HAL_CAN_Start(&hcan2);
-	
-	can_tx.StdId = 0x01;
-	can_tx.ExtId = 0x12;
-	can_tx.IDE = CAN_ID_STD;
-	can_tx.RTR = CAN_RTR_DATA;
-	can_tx.DLC = 8;
+
+  // start motor
+  can_filter_init();
+  HAL_Delay(2000);
+  start_motor(&hcan1, 0x01);
+
+	//can_tx.StdId = 0x01;
+	//can_tx.ExtId = 0x12;
+	//can_tx.IDE = CAN_ID_STD;
+	//can_tx.RTR = CAN_RTR_DATA;
+	//can_tx.DLC = 8;
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  dm43_mit_t.kp_int =0.0f;
+  dm43_mit_t.kd_int =0.0f;
+  dm43_mit_t.v_int =0.0f;
+  dm43_mit_t.p_int =0.0f;
+  dm43_mit_t.t_int =0.0f;
+
   while (1)
   {
     /* USER CODE END WHILE */
@@ -132,6 +144,8 @@ int main(void)
 			
 			//HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_0);
 		}
+
+    ctrl_motor(&hcan1,1,&dm43_mit_t);
 
 		//HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_0);
     HAL_Delay(100);

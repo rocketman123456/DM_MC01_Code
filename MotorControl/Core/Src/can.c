@@ -55,19 +55,19 @@ void MX_CAN1_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN CAN1_Init 2 */
-	// add custom filter
-	CAN_FilterTypeDef filter;
-	filter.FilterIdHigh = 0 << 5;
-	filter.FilterIdLow = 0x0;
-	filter.FilterMaskIdHigh = 0 << 5;//0xFFE00004 << 5;
-	filter.FilterMaskIdLow = 0x0;
-	filter.FilterFIFOAssignment = CAN_FILTER_FIFO0;
-	filter.FilterBank = 14 + 0;
-	filter.FilterMode = CAN_FILTERMODE_IDMASK;
-	filter.FilterScale = CAN_FILTERSCALE_32BIT;
-	filter.FilterActivation = ENABLE;
-	filter.SlaveStartFilterBank = 1;
-	HAL_CAN_ConfigFilter(&hcan1, &filter);
+  // add custom filter
+  // CAN_FilterTypeDef filter;
+  // filter.FilterIdHigh = 0 << 5;
+  // filter.FilterIdLow = 0x0;
+  // filter.FilterMaskIdHigh = 0 << 5;//0xFFE00004 << 5;
+  // filter.FilterMaskIdLow = 0x0;
+  // filter.FilterFIFOAssignment = CAN_FILTER_FIFO0;
+  // filter.FilterBank = 14 + 0;
+  // filter.FilterMode = CAN_FILTERMODE_IDMASK;
+  // filter.FilterScale = CAN_FILTERSCALE_32BIT;
+  // filter.FilterActivation = ENABLE;
+  // filter.SlaveStartFilterBank = 1;
+  // HAL_CAN_ConfigFilter(&hcan1, &filter);
   /* USER CODE END CAN1_Init 2 */
 
 }
@@ -100,18 +100,18 @@ void MX_CAN2_Init(void)
   }
   /* USER CODE BEGIN CAN2_Init 2 */
 	// add custom filter
-	CAN_FilterTypeDef filter;
-	filter.FilterIdHigh = 0 << 5;
-	filter.FilterIdLow = 0x0;
-	filter.FilterMaskIdHigh = 0 << 5;//0xFFE00004 << 5;
-	filter.FilterMaskIdLow = 0x0;
-	filter.FilterFIFOAssignment = CAN_FILTER_FIFO0;
-	filter.FilterBank = 14 + 13;
-	filter.FilterMode = CAN_FILTERMODE_IDMASK;
-	filter.FilterScale = CAN_FILTERSCALE_32BIT;
-	filter.FilterActivation = ENABLE;
-	filter.SlaveStartFilterBank = 14 + 1;
-	HAL_CAN_ConfigFilter(&hcan2, &filter);
+	// CAN_FilterTypeDef filter;
+	// filter.FilterIdHigh = 0 << 5;
+	// filter.FilterIdLow = 0x0;
+	// filter.FilterMaskIdHigh = 0 << 5;//0xFFE00004 << 5;
+	// filter.FilterMaskIdLow = 0x0;
+	// filter.FilterFIFOAssignment = CAN_FILTER_FIFO0;
+	// filter.FilterBank = 14 + 13;
+	// filter.FilterMode = CAN_FILTERMODE_IDMASK;
+	// filter.FilterScale = CAN_FILTERSCALE_32BIT;
+	// filter.FilterActivation = ENABLE;
+	// filter.SlaveStartFilterBank = 14 + 1;
+	// HAL_CAN_ConfigFilter(&hcan2, &filter);
   /* USER CODE END CAN2_Init 2 */
 
 }
@@ -238,13 +238,13 @@ void HAL_CAN_MspDeInit(CAN_HandleTypeDef* canHandle)
 }
 
 /* USER CODE BEGIN 1 */
-void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
-{
-  if(HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &can_rx, can_data) == HAL_OK)
-	{
-		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_0);
-		can_data[can_rx.DLC] = can_rx.StdId;
-		CDC_Transmit_FS(can_data, can_rx.DLC + 1);
-	}
-}
+// void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
+// {
+//   if(HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &can_rx, can_data) == HAL_OK)
+// 	{
+// 		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_0);
+// 		can_data[can_rx.DLC] = can_rx.StdId;
+// 		CDC_Transmit_FS(can_data, can_rx.DLC + 1);
+// 	}
+// }
 /* USER CODE END 1 */

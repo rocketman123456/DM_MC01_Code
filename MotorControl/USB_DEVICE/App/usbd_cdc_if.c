@@ -22,8 +22,8 @@
 #include "usbd_cdc_if.h"
 
 /* USER CODE BEGIN INCLUDE */
+#include "bsp_dm4310.h"
 #include "stm32f4xx_hal.h"
-
 #include "can.h"
 /* USER CODE END INCLUDE */
 
@@ -111,7 +111,7 @@ uint8_t UserTxBufferFS[APP_TX_DATA_SIZE];
 extern USBD_HandleTypeDef hUsbDeviceFS;
 
 /* USER CODE BEGIN EXPORTED_VARIABLES */
-
+extern Motor_MIT_Data_t dm43_mit_t;
 /* USER CODE END EXPORTED_VARIABLES */
 
 /**
@@ -267,11 +267,11 @@ static int8_t CDC_Receive_FS(uint8_t* Buf, uint32_t *Len)
   USBD_CDC_ReceivePacket(&hUsbDeviceFS);
 
 	memcpy(cdc_data, Buf, *Len);
-	cdc_receive = 1;
+	//cdc_receive = 1;
 
 	// send command to can
 	//CDC_Transmit_FS(Buf, *Len);
-	HAL_CAN_AddTxMessage(&hcan1, &can_tx, Buf, &can_tx_mailbox);
+	//HAL_CAN_AddTxMessage(&hcan1, &can_tx, Buf, &can_tx_mailbox);
 	//HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &can_rx, can_data);
 	//CDC_Transmit_FS(can_data, can_rx.DLC);
 

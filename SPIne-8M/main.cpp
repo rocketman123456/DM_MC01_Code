@@ -55,6 +55,8 @@ CANMessage rxMsg1, rxMsg2;
 CANMessage txMsg1, txMsg2;
 CANMessage a1_can, a2_can, h1_can, h2_can, k1_can, k2_can; // TX Messages
 
+Serial pc(PA_2, PA_3);
+
 int led_count = 0;
 int counter   = 0;
 
@@ -64,6 +66,8 @@ DigitalIn   estop(PB_15);
 
 leg_state   l1_state, l2_state;
 leg_control l1_control, l2_control;
+
+bool is_test = false;
 
 // int control_mode = 1;
 // int is_standing  = 0;
@@ -227,53 +231,6 @@ uint32_t xor_checksum(uint32_t* data, size_t len)
     for (int i = 0; i < len; i++)
         t = t ^ data[i];
     return t;
-}
-
-void spi_isr(void)
-{
-    GPIOC->ODR |= (1 << 8);
-    GPIOC->ODR &= ~(1 << 8);
-    SPI1->DR = tx_buff[0];
-
-    int bytecount = 0;
-    while (cs == 0)
-    {
-        if (SPI1->SR & 0x1)
-        {
-            rx_buff[bytecount] = SPI1->DR;
-            bytecount++;
-            if (bytecount < TX_LEN)
-            {
-                SPI1->DR = tx_buff[bytecount];
-            }
-        }
-    }
-
-    // after reading, save into spi_command
-    // should probably check checksum first!
-    uint32_t calc_checksum = xor_checksum((uint32_t*)rx_buff, 32);
-    for (int i = 0; i < CMD_LEN; i++)
-    {
-        ((uint16_t*)(&spi_command))[i] = rx_buff[i];
-    }
-
-    // run control, which fills in tx_buff for the next iteration
-    if (calc_checksum != spi_command.checksum)
-    {
-        spi_data.flags[1] = 0xdead;
-    }
-
-    bool is_test = true;
-    if (is_test)
-    {
-        test_control();
-    }
-    else
-    {
-        control();
-        PackAll();
-        WriteAll();
-    }
 }
 
 int softstop_joint(joint_state state, joint_control* control, float limit_p, float limit_n)
@@ -447,6 +404,54 @@ void test_control()
     memcpy(tx_buff, &spi_data, sizeof(spi_data_t));
 }
 
+void spi_isr(void)
+{
+    led = !led;
+
+    GPIOC->ODR |= (1 << 8);
+    GPIOC->ODR &= ~(1 << 8);
+    SPI1->DR = tx_buff[0];
+
+    int bytecount = 0;
+    while (cs == 0)
+    {
+        if (SPI1->SR & 0x1)
+        {
+            rx_buff[bytecount] = SPI1->DR;
+            bytecount++;
+            if (bytecount < TX_LEN)
+            {
+                SPI1->DR = tx_buff[bytecount];
+            }
+        }
+    }
+
+    // after reading, save into spi_command
+    // should probably check checksum first!
+    uint32_t calc_checksum = xor_checksum((uint32_t*)rx_buff, 32);
+    for (int i = 0; i < CMD_LEN; i++)
+    {
+        ((uint16_t*)(&spi_command))[i] = rx_buff[i];
+    }
+
+    // run control, which fills in tx_buff for the next iteration
+    if (calc_checksum != spi_command.checksum)
+    {
+        spi_data.flags[1] = 0xdead;
+    }
+
+    if (is_test)
+    {
+        test_control();
+    }
+    else
+    {
+        control();
+        PackAll();
+        WriteAll();
+    }
+}
+
 void init_spi(void)
 {
     SPISlave* spi = new SPISlave(PA_7, PA_6, PA_5, PA_4);
@@ -456,19 +461,78 @@ void init_spi(void)
     cs.fall(&spi_isr);
 }
 
+void serial_isr()
+{
+    /// handle keyboard commands from the serial terminal ///
+    while (pc.readable())
+    {
+        char c = pc.getc();
+        switch (c)
+        {
+            case (27):
+                // loop.detach();
+                printf("\n\r exiting motor mode \n\r");
+                ExitMotorMode(&a1_can);
+                ExitMotorMode(&a2_can);
+                ExitMotorMode(&h1_can);
+                ExitMotorMode(&h2_can);
+                ExitMotorMode(&k1_can);
+                ExitMotorMode(&k2_can);
+                enabled = 0;
+                break;
+            case ('m'):
+                printf("\n\r entering motor mode \n\r");
+                EnterMotorMode(&a1_can);
+                EnterMotorMode(&a2_can);
+                EnterMotorMode(&h1_can);
+                EnterMotorMode(&h2_can);
+                EnterMotorMode(&k1_can);
+                EnterMotorMode(&k2_can);
+                wait(.5);
+                enabled = 1;
+                // loop.attach(&sendCMD, .001);
+                break;
+            case ('s'):
+                printf("\n\r standing \n\r");
+                // counter2    = 0;
+                // is_standing = 1;
+                // stand();
+                break;
+            case ('z'):
+                printf("\n\r zeroing \n\r");
+                Zero(&a1_can);
+                Zero(&a2_can);
+                Zero(&h1_can);
+                Zero(&h2_can);
+                Zero(&k1_can);
+                Zero(&k2_can);
+                break;
+        }
+    }
+    WriteAll();
+}
+
 int main()
 {
     led = 1;
     wait(1);
     led = 0;
+
+    // init serial debug
+    pc.baud(921600);
+    pc.attach(&serial_isr);
+
     estop.mode(PullUp);
 
-    // can1.frequency(1000000);              // set bit rate to 1Mbps
-    // can1.attach(&rxISR1);                 // attach 'CAN receive-complete' interrupt handler
-    can1.filter(CAN_ID << 21, 0xFFE00004, CANStandard, 0); // set up can filter
-    // can2.frequency(1000000);              // set bit rate to 1Mbps
-    // can2.attach(&rxISR2);                 // attach 'CAN receive-complete' interrupt handler
-    can2.filter(CAN_ID << 21, 0xFFE00004, CANStandard, 0); // set up can filter
+    if (!is_test)
+    {
+        // can1.frequency(1000000);              // set bit rate to 1Mbps
+        // can1.attach(&rxISR1);                 // attach 'CAN receive-complete' interrupt handler
+        can1.filter(CAN_ID << 21, 0xFFE00004, CANStandard, 0); // set up can filter
+        // can2.frequency(1000000);              // set bit rate to 1Mbps
+        // can2.attach(&rxISR2);                 // attach 'CAN receive-complete' interrupt handler
+        can2.filter(CAN_ID << 21, 0xFFE00004, CANStandard, 0); // set up can filter
+    }
 
     memset(&tx_buff, 0, TX_LEN * sizeof(uint16_t));
     memset(&spi_data, 0, sizeof(spi_data_t));
@@ -476,30 +540,33 @@ int main()
 
     NVIC_SetPriority(TIM5_IRQn, 1);
 
-    a1_can.len = 8; // transmit 8 bytes
-    a2_can.len = 8; // transmit 8 bytes
-    h1_can.len = 8;
-    h2_can.len = 8;
-    k1_can.len = 8;
-    k2_can.len = 8;
+    if (!is_test)
+    {
+        a1_can.len = 8; // transmit 8 bytes
+        a2_can.len = 8; // transmit 8 bytes
+        h1_can.len = 8;
+        h2_can.len = 8;
+        k1_can.len = 8;
+        k2_can.len = 8;
 
-    rxMsg1.len = 6; // receive 6 bytes
-    rxMsg2.len = 6; // receive 6 bytes
+        rxMsg1.len = 6; // receive 6 bytes
+        rxMsg2.len = 6; // receive 6 bytes
 
-    a1_can.id = 0x1;
-    a2_can.id = 0x1;
-    h1_can.id = 0x2;
-    h2_can.id = 0x2;
-    k1_can.id = 0x3;
-    k2_can.id = 0x3;
+        a1_can.id = 0x1;
+        a2_can.id = 0x1;
+        h1_can.id = 0x2;
+        h2_can.id = 0x2;
+        k1_can.id = 0x3;
+        k2_can.id = 0x3;
 
-    pack_cmd(&a1_can, l1_control.a);
-    pack_cmd(&a2_can, l2_control.a);
-    pack_cmd(&h1_can, l1_control.h);
-    pack_cmd(&h2_can, l2_control.h);
-    pack_cmd(&k1_can, l1_control.k);
-    pack_cmd(&k2_can, l2_control.k);
-    WriteAll();
+        pack_cmd(&a1_can, l1_control.a);
+        pack_cmd(&a2_can, l2_control.a);
+        pack_cmd(&h1_can, l1_control.h);
+        pack_cmd(&h2_can, l2_control.h);
+        pack_cmd(&k1_can, l1_control.k);
+        pack_cmd(&k2_can, l2_control.k);
+        WriteAll();
+    }
 
     // SPI doesn't work if enabled while the CS pin is pulled low
     // Wait for CS to not be low, then enable SPI
@@ -518,20 +585,23 @@ int main()
         spi_enabled = 1;
     }
 
-    led = 1;
+    led = 0;
 
     while (1)
     {
         counter++;
-        if (led_count % 1000 == 0)
-        {
-            led = !led;
-        }
+        // if (counter % 1000 == 0)
+        // {
+        //     led = !led;
+        // }
 
-        can2.read(rxMsg2); // read message into Rx message storage
-        unpack_reply(rxMsg2, &l2_state);
-        can1.read(rxMsg1); // read message into Rx message storage
-        unpack_reply(rxMsg1, &l1_state);
+        if (!is_test)
+        {
+            can2.read(rxMsg2); // read message into Rx message storage
+            unpack_reply(rxMsg2, &l2_state);
+            can1.read(rxMsg1); // read message into Rx message storage
+            unpack_reply(rxMsg1, &l1_state);
+        }
         wait_us(10);
     }
 }

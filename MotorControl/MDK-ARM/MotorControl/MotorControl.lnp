@@ -33,6 +33,7 @@
 "motorcontrol\usbd_ctlreq.o"
 "motorcontrol\usbd_ioreq.o"
 "motorcontrol\usbd_cdc.o"
+"motorcontrol\bsp_dm4310.o"
 --strict --scatter "MotorControl\MotorControl.sct"
 --summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
 --info sizes --info totals --info unused --info veneers
