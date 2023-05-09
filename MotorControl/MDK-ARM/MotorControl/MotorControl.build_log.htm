@@ -27,11 +27,25 @@ Project File Date:  05/08/2023
 <h2>Output:</h2>
 *** Using Compiler 'V5.06 update 7 (build 960)', folder: 'C:\Keil_v5\ARM\ARMCC\Bin'
 Build target 'MotorControl'
+compiling usbd_cdc_if.c...
+..\Users\bsp_dm4310.h(58): error:  #147-D: declaration is incompatible with "void ctrl_motor(CAN_HandleTypeDef *, uint16_t, Motor_MIT_Data_t *)"  (declared at line 57)
+  void ctrl_motor(CAN_HandleTypeDef* hcan, uint16_t id, uint8_t* msg);
+../USB_DEVICE/App/usbd_cdc_if.c: 0 warnings, 1 error
+compiling main.c...
+..\Users\bsp_dm4310.h(58): error:  #147-D: declaration is incompatible with "void ctrl_motor(CAN_HandleTypeDef *, uint16_t, Motor_MIT_Data_t *)"  (declared at line 57)
+  void ctrl_motor(CAN_HandleTypeDef* hcan, uint16_t id, uint8_t* msg);
+../Core/Src/main.c(148): error:  #167: argument of type "Motor_MIT_Data_t *" is incompatible with parameter of type "uint8_t *"
+      ctrl_motor(&hcan1,1,&dm43_mit_t);
+../Core/Src/main.c: 0 warnings, 2 errors
 compiling bsp_dm4310.c...
-linking...
-Program Size: Code=18206 RO-data=502 RW-data=292 ZI-data=9124  
-FromELF: creating hex file...
-"MotorControl\MotorControl.axf" - 0 Error(s), 0 Warning(s).
+..\Users\bsp_dm4310.h(58): error:  #147-D: declaration is incompatible with "void ctrl_motor(CAN_HandleTypeDef *, uint16_t, Motor_MIT_Data_t *)"  (declared at line 57)
+  void ctrl_motor(CAN_HandleTypeDef* hcan, uint16_t id, uint8_t* msg);
+..\Users\bsp_dm4310.c(85): error:  #147-D: declaration is incompatible with "void ctrl_motor(CAN_HandleTypeDef *, uint16_t, uint8_t *)"  (declared at line 57 of "..\Users\bsp_dm4310.h")
+  void ctrl_motor(CAN_HandleTypeDef* hcan, uint16_t id, Motor_MIT_Data_t* _dm43_mit_t) //MIT模式
+..\Users\bsp_dm4310.c(112): error:  #247: function "ctrl_motor"  has already been defined
+  void ctrl_motor(CAN_HandleTypeDef* hcan, uint16_t id, uint8_t* msg) //MIT模式
+..\Users\bsp_dm4310.c: 0 warnings, 3 errors
+"MotorControl\MotorControl.axf" - 6 Error(s), 0 Warning(s).
 
 <h2>Software Packages used:</h2>
 
@@ -55,7 +69,8 @@ Package Vendor: Keil
 
    * Component: ARM::CMSIS:CORE:5.6.0
       Include file:  CMSIS/Core/Include/tz_context.h
-Build Time Elapsed:  00:00:02
+Target not created.
+Build Time Elapsed:  00:00:03
 </pre>
 </body>
 </html>

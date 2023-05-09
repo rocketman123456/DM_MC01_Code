@@ -8,8 +8,8 @@
 #define TX_LEN 66
 
 // length of outgoing/incoming messages
-#define DATA_LEN 42
-#define CMD_LEN 66
+//#define DATA_LEN 42
+//#define CMD_LEN 66
 
 // Master CAN ID ///
 #define CAN_ID 0x0
@@ -258,6 +258,7 @@ int softstop_joint(joint_state state, joint_control* control, float limit_p, flo
 
 void control()
 {
+    // write enable/disable motor command
     if (((spi_command.flags[0] & 0x1) == 1) && (enabled == 0))
     {
         enabled = 1;
@@ -293,6 +294,7 @@ void control()
         return;
     }
 
+    // get motor state
     spi_data.q_abad[0]   = l1_state.a.p;
     spi_data.q_hip[0]    = l1_state.h.p;
     spi_data.q_knee[0]   = l1_state.k.p;
@@ -315,8 +317,6 @@ void control()
 
     if (estop == 0)
     {
-        led = 1;
-
         memset(&l1_control, 0, sizeof(l1_control));
         memset(&l2_control, 0, sizeof(l2_control));
         spi_data.flags[0] = 0xdead;
@@ -324,8 +324,6 @@ void control()
     }
     else
     {
-        led = 0;
-
         memset(&l1_control, 0, sizeof(l1_control));
         memset(&l2_control, 0, sizeof(l2_control));
 
@@ -365,19 +363,18 @@ void control()
         l2_control.k.kd    = spi_command.kd_knee[1];
         l2_control.k.t_ff  = spi_command.tau_knee_ff[1];
 
-        spi_data.flags[0] = 0;
-        spi_data.flags[1] = 0;
+        // spi_data.flags[0] = 0xbeef;
+        // spi_data.flags[1] = 0xbeef;
+        spi_data.flags[0] = spi_command.flags[0];
+        spi_data.flags[1] = spi_command.flags[1];
         spi_data.flags[0] |= softstop_joint(l1_state.a, &l1_control.a, A_LIM_P, A_LIM_N);
         spi_data.flags[0] |= (softstop_joint(l1_state.h, &l1_control.h, H_LIM_P, H_LIM_N)) << 1;
         // spi_data.flags[0] |= (softstop_joint(l1_state.k, &l1_control.k, K_LIM_P, K_LIM_N))<<2;
         spi_data.flags[1] |= softstop_joint(l2_state.a, &l2_control.a, A_LIM_P, A_LIM_N);
         spi_data.flags[1] |= (softstop_joint(l2_state.h, &l2_control.h, H_LIM_P, H_LIM_N)) << 1;
         // spi_data.flags[1] |= (softstop_joint(l2_state.k, &l2_control.k, K_LIM_P, K_LIM_N))<<2;
-
-        // spi_data.flags[0] = 0xbeef;
-        // spi_data.flags[1] = 0xbeef;
     }
-    spi_data.checksum = xor_checksum((uint32_t*)&spi_data, 14);
+    spi_data.checksum = xor_checksum((uint32_t*)&spi_data, (sizeof(spi_data_t) - 4) / 4);
 
     memcpy(tx_buff, &spi_data, sizeof(spi_data_t));
 }
@@ -393,6 +390,10 @@ void test_control()
         spi_data.qd_abad[i] = spi_command.qd_des_abad[i] + 1.f;
         spi_data.qd_knee[i] = spi_command.qd_des_knee[i] + 1.f;
         spi_data.qd_hip[i]  = spi_command.qd_des_hip[i] + 1.f;
+
+        spi_data.tau_abad[i] = spi_command.tau_abad_ff[i] + 1.f;
+        spi_data.tau_hip[i] = spi_command.tau_hip_ff[i] + 1.f;
+        spi_data.tau_knee[i]  = spi_command.tau_knee_ff[i] + 1.f;
     }
 
     spi_data.flags[0] = 0xdead;
@@ -406,8 +407,6 @@ void test_control()
 
 void spi_isr(void)
 {
-    led = !led;
-
     GPIOC->ODR |= (1 << 8);
     GPIOC->ODR &= ~(1 << 8);
     SPI1->DR = tx_buff[0];
@@ -426,17 +425,18 @@ void spi_isr(void)
         }
     }
 
+		led = !led;
+
     // after reading, save into spi_command
     // should probably check checksum first!
     uint32_t calc_checksum = xor_checksum((uint32_t*)rx_buff, 32);
-    for (int i = 0; i < CMD_LEN; i++)
-    {
-        ((uint16_t*)(&spi_command))[i] = rx_buff[i];
-    }
+
+    memcpy(&spi_command, &rx_buff, sizeof(spi_command_t));
 
     // run control, which fills in tx_buff for the next iteration
     if (calc_checksum != spi_command.checksum)
     {
+        spi_data.flags[0] = 0xdead;
         spi_data.flags[1] = 0xdead;
     }
 
@@ -576,7 +576,7 @@ int main()
         {
             wait_us(10);
             led_count++;
-            if (led_count % 1000 == 0)
+            if (led_count % 2000 == 0)
             {
                 led = !led;
             }
@@ -590,11 +590,6 @@ int main()
     while (1)
     {
         counter++;
-        // if (counter % 1000 == 0)
-        // {
-        //     led = !led;
-        // }
-
         if (!is_test)
         {
             can2.read(rxMsg2); // read message into Rx message storage

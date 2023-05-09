@@ -5,6 +5,7 @@
 
 // 84 bytes
 // 42 16-bit words
+#pragma pack(1)
 struct spi_data_t
 {
     float q_abad[2];
@@ -50,6 +51,7 @@ struct spi_command_t
     int32_t flags[2];
     int32_t checksum;
 };
+#pragma pack()
 
 struct joint_control
 {
