@@ -383,17 +383,17 @@ void test_control()
 {
     for (int i = 0; i < 2; i++)
     {
-        spi_data.q_abad[i] = spi_command.q_des_abad[i] + 1.f;
-        spi_data.q_knee[i] = spi_command.q_des_knee[i] + 1.f;
-        spi_data.q_hip[i]  = spi_command.q_des_hip[i] + 1.f;
+        spi_data.q_abad[i] = 1;//spi_command.q_des_abad[i] + 1.f;
+        spi_data.q_knee[i] = 2;//spi_command.q_des_knee[i] + 1.f;
+        spi_data.q_hip[i]  = 3;//spi_command.q_des_hip[i] + 1.f;
 
-        spi_data.qd_abad[i] = spi_command.qd_des_abad[i] + 1.f;
-        spi_data.qd_knee[i] = spi_command.qd_des_knee[i] + 1.f;
-        spi_data.qd_hip[i]  = spi_command.qd_des_hip[i] + 1.f;
+        spi_data.qd_abad[i] = 4;//spi_command.qd_des_abad[i] + 1.f;
+        spi_data.qd_knee[i] = 5;//spi_command.qd_des_knee[i] + 1.f;
+        spi_data.qd_hip[i]  = 6;//spi_command.qd_des_hip[i] + 1.f;
 
-        spi_data.tau_abad[i] = spi_command.tau_abad_ff[i] + 1.f;
-        spi_data.tau_hip[i] = spi_command.tau_hip_ff[i] + 1.f;
-        spi_data.tau_knee[i]  = spi_command.tau_knee_ff[i] + 1.f;
+        spi_data.tau_abad[i] = 7;//spi_command.tau_abad_ff[i] + 1.f;
+        spi_data.tau_hip[i] = 8;//spi_command.tau_hip_ff[i] + 1.f;
+        spi_data.tau_knee[i]  = 9;//spi_command.tau_knee_ff[i] + 1.f;
     }
 
     spi_data.flags[0] = 0xdead;
@@ -407,8 +407,11 @@ void test_control()
 
 void spi_isr(void)
 {
-    GPIOC->ODR |= (1 << 8);
-    GPIOC->ODR &= ~(1 << 8);
+    led = !led;
+    printf("start spi isr");
+
+    GPIOC->ODR |= (1 << 8); // pull high
+    GPIOC->ODR &= ~(1 << 8); // pull low
     SPI1->DR = tx_buff[0];
 
     int bytecount = 0;
@@ -425,7 +428,7 @@ void spi_isr(void)
         }
     }
 
-		led = !led;
+    printf("finish spi isr");
 
     // after reading, save into spi_command
     // should probably check checksum first!
@@ -454,6 +457,7 @@ void spi_isr(void)
 
 void init_spi(void)
 {
+    pc.printf("init spi");
     SPISlave* spi = new SPISlave(PA_7, PA_6, PA_5, PA_4);
     spi->format(16, 0);
     spi->frequency(12000000);
@@ -566,6 +570,10 @@ int main()
         pack_cmd(&k1_can, l1_control.k);
         pack_cmd(&k2_can, l2_control.k);
         WriteAll();
+    }
+    else
+    {
+        test_control();
     }
 
     // SPI doesn't work if enabled while the CS pin is pulled low

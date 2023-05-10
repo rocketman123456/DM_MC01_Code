@@ -16,10 +16,21 @@
             "console": "integratedTerminal"
         },
         {
+            "name": "(windows) convert_can",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/ConvertCAN/Debug/convert_can.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/build",
+            "environment": [],
+            "console": "integratedTerminal"
+        },
+        {
             "name": "(macosx) control",
             "type": "lldb",
             "request": "launch",
-            "program": "${workspaceFolder}/build/USB2CAN-Control/Debug/PiccoloEditor",
+            "program": "${workspaceFolder}/build/USB2CAN-Control/Debug/control",
             "args": [],
             "cwd": "${workspaceFolder}/build",
             "terminal": "integrated"

@@ -7,4 +7,5 @@ include_directories(
 )
 
 add_subdirectory(3rdParty)
+add_subdirectory(ConvertCAN)
 add_subdirectory(USB2CAN-Control)
