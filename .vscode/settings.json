@@ -84,6 +84,8 @@
         "xtree": "cpp",
         "xutility": "cpp",
         "*.inc": "c",
-        "*.def": "cpp"
+        "*.def": "cpp",
+        "usart.h": "c",
+        "stm32f4xx_hal_uart.h": "c"
     }
 }

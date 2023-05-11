@@ -106,7 +106,7 @@ void pack_cmd(uint8_t* msg, int32_t len, joint_control& joint)
 // 3: [velocity[11-4]]
 // 4: [velocity[3-0], current[11-8]]
 // 5: [current[7-0]]
-void unpack_reply(uint8_t* msg, int32_t len, leg_state* leg)
+void unpack_reply(uint8_t* msg, int32_t len, joint_state* leg)
 {
     /// unpack ints from can buffer ///
     uint16_t id    = msg[0];
@@ -118,22 +118,7 @@ void unpack_reply(uint8_t* msg, int32_t len, leg_state* leg)
     float v = uint_to_float(v_int, V_MIN, V_MAX, 12);
     float t = uint_to_float(i_int, -T_MAX, T_MAX, 12);
 
-    if (id == 1)
-    {
-        leg->a.p = p;
-        leg->a.v = v;
-        leg->a.t = t;
-    }
-    else if (id == 2)
-    {
-        leg->h.p = p;
-        leg->h.v = v;
-        leg->h.t = t;
-    }
-    else if (id == 3)
-    {
-        leg->k.p = p;
-        leg->k.v = v;
-        leg->k.t = t;
-    }
+    leg->p = p;
+    leg->v = v;
+    leg->t = t;
 }

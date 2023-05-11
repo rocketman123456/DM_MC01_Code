@@ -460,7 +460,8 @@ void init_spi(void)
     pc.printf("init spi");
     SPISlave* spi = new SPISlave(PA_7, PA_6, PA_5, PA_4);
     spi->format(16, 0);
-    spi->frequency(12000000);
+    //spi->frequency(12000000);
+    spi->frequency(6000000);
     spi->reply(0x0);
     cs.fall(&spi_isr);
 }

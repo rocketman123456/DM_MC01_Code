@@ -25,7 +25,9 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "stm32f4xx_hal_uart.h"
+#include "stm32f4xx_hal_spi.h"
+#include "stm32f4xx_hal_gpio.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -56,7 +58,9 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+int state = 1;
+static uint8_t tx[16];
+static uint8_t rx[16];
 /* USER CODE END 0 */
 
 /**
@@ -92,7 +96,13 @@ int main(void)
   MX_SPI1_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
+  for(int i = 0; i < 16; ++i)
+  {
+    tx[i] = 16 - i;
+  }
 
+  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, state);
+  HAL_SPI_TransmitReceive_IT(&hspi1, tx, rx, 16);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -102,6 +112,9 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    //HAL_SPI_TransmitReceive(&hspi1, tx, rx, 16, 10);
+    //HAL_UART_Transmit(&huart2, "hello", 6, 100);
+    HAL_Delay(1000);
   }
   /* USER CODE END 3 */
 }
@@ -153,7 +166,23 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+  if(GPIO_Pin == SPI_CS_Pin)
+  {
+    if(HAL_GPIO_ReadPin(SPI_CS_GPIO_Port, SPI_CS_Pin) == GPIO_PIN_RESET)
+    {
+      state = !state;
+      HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, state);
+      HAL_SPI_TransmitReceive_IT(&hspi1, tx, rx, 16);
+    }
+  }
+}
 
+void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
+{
+  // TX Done .. Do Something ...
+}
 /* USER CODE END 4 */
 
 /**
