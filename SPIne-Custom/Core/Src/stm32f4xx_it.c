@@ -61,7 +61,8 @@ extern CAN_HandleTypeDef hcan2;
 extern SPI_HandleTypeDef hspi1;
 extern UART_HandleTypeDef huart2;
 /* USER CODE BEGIN EV */
-
+extern uint8_t tx[16];
+extern uint8_t rx[16];
 /* USER CODE END EV */
 
 /******************************************************************************/
@@ -250,11 +251,13 @@ void CAN1_RX1_IRQHandler(void)
 void SPI1_IRQHandler(void)
 {
   /* USER CODE BEGIN SPI1_IRQn 0 */
-
+  //HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
   /* USER CODE END SPI1_IRQn 0 */
   HAL_SPI_IRQHandler(&hspi1);
   /* USER CODE BEGIN SPI1_IRQn 1 */
-
+  //__HAL_SPI_DISABLE_IT(&hspi1, SPI_IT_RXNE);
+	//HAL_SPI_TransmitReceive(&hspi1,  tx, rx, 16, 10);
+  //__HAL_SPI_ENABLE_IT(&hspi1, SPI_IT_RXNE);
   /* USER CODE END SPI1_IRQn 1 */
 }
 

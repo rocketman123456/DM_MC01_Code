@@ -59,8 +59,8 @@ void SystemClock_Config(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 int state = 1;
-static uint8_t tx[16];
-static uint8_t rx[16];
+uint8_t tx[16];
+uint8_t rx[16];
 /* USER CODE END 0 */
 
 /**
@@ -100,9 +100,7 @@ int main(void)
   {
     tx[i] = 16 - i;
   }
-
-  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, state);
-  HAL_SPI_TransmitReceive_IT(&hspi1, tx, rx, 16);
+  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -112,8 +110,8 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    //HAL_SPI_TransmitReceive(&hspi1, tx, rx, 16, 10);
-    //HAL_UART_Transmit(&huart2, "hello", 6, 100);
+    //HAL_SPI_TransmitReceive(&hspi1, tx, rx, 16, 10000);
+    //HAL_UART_Transmit(&huart2, "hello", 6, 10000);
     HAL_Delay(1000);
   }
   /* USER CODE END 3 */
@@ -170,18 +168,14 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
   if(GPIO_Pin == SPI_CS_Pin)
   {
-    if(HAL_GPIO_ReadPin(SPI_CS_GPIO_Port, SPI_CS_Pin) == GPIO_PIN_RESET)
-    {
-      state = !state;
-      HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, state);
-      HAL_SPI_TransmitReceive_IT(&hspi1, tx, rx, 16);
-    }
-  }
-}
+    HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+		HAL_SPI_TransmitReceive(&hspi1, tx, rx, 16, 10000);
 
-void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
-{
-  // TX Done .. Do Something ...
+    hspi1.Instance->DR = 0x00;
+
+		//MX_SPI1_Init();
+    //HAL_SPI_MspDeInit(&hspi1);
+  }
 }
 /* USER CODE END 4 */
 

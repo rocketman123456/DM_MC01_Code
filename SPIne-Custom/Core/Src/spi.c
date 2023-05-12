@@ -53,7 +53,8 @@ void MX_SPI1_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN SPI1_Init 2 */
-
+  //__HAL_SPI_ENABLE_IT(&hspi1, SPI_IT_RXNE);
+  __HAL_SPI_ENABLE(&hspi1);
   /* USER CODE END SPI1_Init 2 */
 
 }
