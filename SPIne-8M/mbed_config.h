@@ -22,7 +22,7 @@
 #define __MBED_CONFIG_DATA__
 
 // Configuration parameters
-#define CLOCK_SOURCE                                USE_PLL_HSE_EXTC|USE_PLL_HSI // set by target:NUCLEO_F446ZE
+#define CLOCK_SOURCE                                USE_PLL_HSE_XTAL // set by target:NUCLEO_F446ZE
 #define MBED_CONF_DRIVERS_UART_SERIAL_RXBUF_SIZE    256              // set by library:drivers
 #define MBED_CONF_DRIVERS_UART_SERIAL_TXBUF_SIZE    256              // set by library:drivers
 #define MBED_CONF_PLATFORM_DEFAULT_SERIAL_BAUD_RATE 9600             // set by library:platform
