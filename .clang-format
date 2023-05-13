@@ -1,6 +1,6 @@
 ---
 StatementMacros: ["Meta", "CLASS", "REFLECTION_TYPE", "REFLECTION_BODY"]
-Language: [Cpp]
+Language: Cpp
 # BasedOnStyle:  Google
 AccessModifierOffset: -4
 AlignAfterOpenBracket: Align
