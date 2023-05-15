@@ -877,11 +877,11 @@ ARM Macro Assembler    Page 14
               00000000 
 Command Line: --debug --xref --diag_suppress=9931 --cpu=Cortex-M4.fp.sp --apcs=
 interwork --depend=spine-custom\startup_stm32f446xx.d -ospine-custom\startup_st
-m32f446xx.o -I.\RTE\_SPIne-Custom -IC:\Arm\Packs\ARM\CMSIS\5.9.0\CMSIS\Core\Inc
-lude -IC:\Arm\Packs\Keil\STM32F4xx_DFP\2.17.0\Drivers\CMSIS\Device\ST\STM32F4xx
-\Include --predefine="__UVISION_VERSION SETA 538" --predefine="_RTE_ SETA 1" --
-predefine="STM32F446xx SETA 1" --predefine="_RTE_ SETA 1" --list=startup_stm32f
-446xx.lst startup_stm32f446xx.s
+m32f446xx.o -I..\Core\Inc -I.\RTE\_SPIne-Custom -IC:\Arm\Packs\ARM\CMSIS\5.9.0\
+CMSIS\Core\Include -IC:\Arm\Packs\Keil\STM32F4xx_DFP\2.17.0\Drivers\CMSIS\Devic
+e\ST\STM32F4xx\Include --predefine="__UVISION_VERSION SETA 538" --predefine="_R
+TE_ SETA 1" --predefine="STM32F446xx SETA 1" --predefine="_RTE_ SETA 1" --list=
+startup_stm32f446xx.lst startup_stm32f446xx.s
 
 
 

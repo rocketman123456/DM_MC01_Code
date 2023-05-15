@@ -86,6 +86,10 @@
         "*.inc": "c",
         "*.def": "cpp",
         "usart.h": "c",
-        "stm32f4xx_hal_uart.h": "c"
+        "stm32f4xx_hal_uart.h": "c",
+        "main.h": "c",
+        "stm32f4xx_hal_gpio.h": "c",
+        "cmsis_os.h": "c",
+        "crc.h": "c"
     }
 }
