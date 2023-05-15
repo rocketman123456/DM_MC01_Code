@@ -29,6 +29,8 @@
 #include "stm32f4xx_hal_uart.h"
 #include "stm32f4xx_hal_spi.h"
 #include "stm32f4xx_hal_gpio.h"
+
+#include "crc.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -87,6 +89,7 @@ int main(void)
 
   /* USER CODE BEGIN SysInit */
   HAL_Delay(1000);
+  create_lookup_table();
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */

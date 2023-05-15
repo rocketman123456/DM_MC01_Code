@@ -395,6 +395,26 @@
           <GroupName>Application/User/Core</GroupName>
           <Files>
             <File>
+              <FileName>math_ops.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\math_ops.c</FilePath>
+            </File>
+            <File>
+              <FileName>message_ops.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\message_ops.c</FilePath>
+            </File>
+            <File>
+              <FileName>crc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\crc.c</FilePath>
+            </File>
+            <File>
+              <FileName>motor_control.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\motor_control.c</FilePath>
+            </File>
+            <File>
               <FileName>main.c</FileName>
               <FileType>1</FileType>
               <FilePath>../Core/Src/main.c</FilePath>
@@ -540,21 +560,6 @@
                   </Cads>
                 </FileArmAds>
               </FileOption>
-            </File>
-            <File>
-              <FileName>math_ops.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Core\Src\math_ops.c</FilePath>
-            </File>
-            <File>
-              <FileName>message_ops.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Core\Src\message_ops.c</FilePath>
-            </File>
-            <File>
-              <FileName>crc.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Core\Src\crc.c</FilePath>
             </File>
           </Files>
         </Group>

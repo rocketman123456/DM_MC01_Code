@@ -26,6 +26,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "motor_control.h"
+#include "crc.h"
 
 #include "can.h"
 #include "spi.h"
@@ -35,6 +36,9 @@
 #include "stm32f4xx_hal_uart.h"
 #include "stm32f4xx_hal_spi.h"
 #include "stm32f4xx_hal_gpio.h"
+
+#include <stdlib.h>
+#include <string.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -48,8 +52,8 @@ spine_cmd_t   g_cmd;
 spine_state_t g_state;
 
 int state = 1;
-uint8_t tx[16] = {0};
-uint8_t rx[16] = {0};
+uint8_t tx[140] = {0};
+uint8_t rx[140] = {0};
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -147,12 +151,26 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   if(GPIO_Pin == SPI_CS_Pin)
   {
     HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
-    HAL_SPI_TransmitReceive(&hspi1, tx, rx, 16, 100);
+    HAL_SPI_TransmitReceive(&hspi1, tx, rx, 132, 100);
 
     hspi1.Instance->DR = 0x00;
 
     // decode rx
+    memcpy(&g_cmd, rx, sizeof(spine_cmd_t));
+    uint32_t crc = calculate((uint8_t*)&g_cmd, sizeof(spine_cmd_t) - 4);
+    if(crc != g_cmd.crc)
+    {
+      //HAL_UART_Transmit(&huart2, "crc error", 10, 10000);
+      HAL_UART_Transmit(&huart2, (uint8_t*) &g_cmd, sizeof(spine_cmd_t), 10000);
+    }
     // copy data to tx
+    g_state.state[0].state[0].p = 1;
+    g_state.state[0].state[0].v = 2;
+    g_state.state[0].state[0].t = 3;
+    g_state.crc = calculate((uint8_t*)&g_state, sizeof(spine_state_t) - 4);
+    memcpy(tx, &g_state, sizeof(spine_state_t));
+
+    HAL_UART_Transmit(&huart2, tx, sizeof(spine_state_t), 10000);
     // trigger event to main task
   }
 }
