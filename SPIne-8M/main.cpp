@@ -8,8 +8,8 @@
 #define TX_LEN 66
 
 // length of outgoing/incoming messages
-#define DATA_LEN 30
-#define CMD_LEN 66
+//#define DATA_LEN 30
+//#define CMD_LEN 66
 
 // Master CAN ID ///
 #define CAN_ID 0x0
@@ -36,9 +36,6 @@
 #define KP_SOFTSTOP 100.0f
 #define KD_SOFTSTOP 0.4f;
 
-#define ENABLE_CMD 0xFFFF
-#define DISABLE_CMD 0x1F1F
-
 spi_data_t    spi_data;    // data from spine to up
 spi_command_t spi_command; // data from up to spine
 
@@ -54,7 +51,7 @@ CAN    can2(PB_8, PB_9, 1000000);   // CAN Rx pin name, CAN Tx pin name
 
 CANMessage rxMsg1, rxMsg2;
 CANMessage txMsg1, txMsg2;
-CANMessage a1_can, a2_can; // TX Messages
+CANMessage a1_can, a2_can;
 CANMessage h1_can, h2_can;
 CANMessage k1_can, k2_can;
 
@@ -63,17 +60,13 @@ Ticker sendCAN;
 int    counter = 0;
 Ticker loop;
 
-int         spi_enabled = 0;
 InterruptIn cs(PA_4);
 DigitalIn   estop(PB_15);
-// SPISlave spi(PA_7, PA_6, PA_5, PA_4);
 
 leg_state l1_state, l2_state;
-;
 leg_control l1_control, l2_control;
 
 uint16_t x        = 0;
-uint16_t x2       = 0;
 uint16_t count    = 0;
 uint16_t counter2 = 0;
 
@@ -101,7 +94,6 @@ void control();
 /// 5: [kd[11-4]]
 /// 6: [kd[3-0], torque[11-8]]
 /// 7: [torque[7-0]]
-
 void pack_cmd(CANMessage* msg, joint_control joint)
 {
 
@@ -139,7 +131,6 @@ void pack_cmd(CANMessage* msg, joint_control joint)
 /// 2: [velocity[11-4]]
 /// 3: [velocity[3-0], current[11-8]]
 /// 4: [current[7-0]]
-
 void unpack_reply(CANMessage msg, leg_state* leg)
 {
     /// unpack ints from can buffer ///
@@ -172,16 +163,26 @@ void unpack_reply(CANMessage msg, leg_state* leg)
     }
 }
 
+uint32_t xor_checksum(uint32_t* data, size_t len)
+{
+    uint32_t t = 0;
+    for (int i = 0; i < len; i++)
+        t = t ^ data[i];
+    return t;
+}
+
 void rxISR1()
 {
     can1.read(rxMsg1); // read message into Rx message storage
     unpack_reply(rxMsg1, &l1_state);
 }
+
 void rxISR2()
 {
     can2.read(rxMsg2);
     unpack_reply(rxMsg2, &l2_state);
 }
+
 void PackAll()
 {
     pack_cmd(&a1_can, l1_control.a);
@@ -191,6 +192,7 @@ void PackAll()
     pack_cmd(&k1_can, l1_control.k);
     pack_cmd(&k2_can, l2_control.k);
 }
+
 void WriteAll()
 {
     // toggle = 1;
@@ -234,7 +236,7 @@ void Zero(CANMessage* msg)
     msg->data[5] = 0xFF;
     msg->data[6] = 0xFF;
     msg->data[7] = 0xFE;
-    WriteAll();
+    // WriteAll();
 }
 
 void EnterMotorMode(CANMessage* msg)
@@ -262,6 +264,7 @@ void ExitMotorMode(CANMessage* msg)
     msg->data[7] = 0xFD;
     // WriteAll();
 }
+
 void serial_isr()
 {
     /// handle keyboard commands from the serial terminal ///
@@ -314,19 +317,14 @@ void serial_isr()
     WriteAll();
 }
 
-uint32_t xor_checksum(uint32_t* data, size_t len)
-{
-    uint32_t t = 0;
-    for (int i = 0; i < len; i++)
-        t = t ^ data[i];
-    return t;
-}
-
 void spi_isr(void)
 {
-    pc.printf("\n\r in SPI_ISR\n\r");
+    led = !led;
+    pc.printf("\n\r enter SPI_ISR\n\r");
+
     GPIOC->ODR |= (1 << 8);
     GPIOC->ODR &= ~(1 << 8);
+
     int bytecount = 0;
     SPI1->DR      = tx_buff[0];
     while (cs == 0)
@@ -339,37 +337,33 @@ void spi_isr(void)
             {
                 SPI1->DR = tx_buff[bytecount];
             }
-            pc.printf("\n\r  SPI_ISR while\n\r");
+            // pc.printf("\n\r  SPI_ISR read \n\r");
         }
     }
 
-    // after reading, save into spi_command
+    pc.printf("\n\r read SPI_ISR finish \n\r");
+
+    // after reading, save data into spi_command
     // should probably check checksum first!
-    uint32_t calc_checksum = xor_checksum((uint32_t*)rx_buff, 32);
-    for (int i = 0; i < CMD_LEN; i++)
-    {
-        ((uint16_t*)(&spi_command))[i] = rx_buff[i];
-    }
+    uint32_t calc_checksum = xor_checksum((uint32_t*)rx_buff, sizeof(spi_command_t) / 2 - 1);
+    memcpy(&spi_command, rx_buff, sizeof(spi_command_t));
+    //for (int i = 0; i < CMD_LEN; i++)
+    //{
+    //    ((uint16_t*)(&spi_command))[i] = rx_buff[i];
+    //}
 
     // run control, which fills in tx_buff for the next iteration
     if (calc_checksum != spi_command.checksum)
     {
+        spi_data.flags[0] = 0xdead;
         spi_data.flags[1] = 0xdead;
     }
 
-    // test_control();
-    // spi_data.q_abad[0] = 12.0f;
-    control();
-    PackAll();
-    WriteAll();
+    test_control();
+    // control();
+    // PackAll();
+    // WriteAll();
 
-    // for (int i = 0; i<TX_LEN; i++) {
-    //    tx_buff[i] = 2*rx_buff[i];
-    //}
-    //    for (int i=0; i<TX_LEN; i++) {
-    //        //printf("%d ", rx_buff[i]);
-    //    }
-    // printf("\n\r");
     pc.printf("\n\r exit SPI_ISR\n\r");
 }
 
@@ -398,7 +392,6 @@ int softstop_joint(joint_state state, joint_control* control, float limit_p, flo
 
 void control()
 {
-
     if (((spi_command.flags[0] & 0x1) == 1) && (enabled == 0))
     {
         enabled = 1;
@@ -414,7 +407,7 @@ void control()
         can1.write(h1_can);
         EnterMotorMode(&h2_can);
         can2.write(h2_can);
-        printf("e\n\r");
+        printf("enter motor mode\n\r");
         return;
     }
     else if ((((spi_command.flags[0] & 0x1)) == 0) && (enabled == 1))
@@ -432,7 +425,7 @@ void control()
         can1.write(k1_can);
         ExitMotorMode(&k2_can);
         can2.write(k2_can);
-        printf("x\n\r");
+        printf("exit motor mode\n\r");
         return;
     }
 
@@ -442,6 +435,9 @@ void control()
     spi_data.qd_abad[0] = l1_state.a.v;
     spi_data.qd_hip[0]  = l1_state.h.v;
     spi_data.qd_knee[0] = l1_state.k.v;
+    spi_data.tau_abad[0] = l1_state.a.t;
+    spi_data.tau_hip[0]  = l1_state.h.t;
+    spi_data.tau_knee[0] = l1_state.k.t;
 
     spi_data.q_abad[1]  = l2_state.a.p;
     spi_data.q_hip[1]   = l2_state.h.p;
@@ -449,20 +445,22 @@ void control()
     spi_data.qd_abad[1] = l2_state.a.v;
     spi_data.qd_hip[1]  = l2_state.h.v;
     spi_data.qd_knee[1] = l2_state.k.v;
+    spi_data.tau_abad[1] = l1_state.a.t;
+    spi_data.tau_hip[1]  = l1_state.h.t;
+    spi_data.tau_knee[1] = l1_state.k.t;
 
     if (estop == 0)
     {
-        // printf("estopped!!!!\n\r");
+        printf("estopped!!!!\n\r");
         memset(&l1_control, 0, sizeof(l1_control));
         memset(&l2_control, 0, sizeof(l2_control));
         spi_data.flags[0] = 0xdead;
         spi_data.flags[1] = 0xdead;
-        led               = 1;
+        //led               = 1;
     }
-
     else
     {
-        led = 0;
+        //led = 0;
 
         memset(&l1_control, 0, sizeof(l1_control));
         memset(&l2_control, 0, sizeof(l2_control));
@@ -517,11 +515,13 @@ void control()
         // PackAll();
         // WriteAll();
     }
-    spi_data.checksum = xor_checksum((uint32_t*)&spi_data, 14);
-    for (int i = 0; i < DATA_LEN; i++)
-    {
-        tx_buff[i] = ((uint16_t*)(&spi_data))[i];
-    }
+
+    spi_data.checksum = xor_checksum((uint32_t*)&spi_data, sizeof(spi_data_t) / 2 - 1);
+    memcpy(tx_buff, &spi_data, sizeof(spi_data_t));
+    //for (int i = 0; i < DATA_LEN; i++)
+    //{
+    //    tx_buff[i] = ((uint16_t*)(&spi_data))[i];
+    //}
 }
 
 void test_control()
@@ -538,13 +538,13 @@ void test_control()
     }
 
     spi_data.flags[0] = 0xdead;
-    // spi_data.flags[1] = 0xbeef;
+    spi_data.flags[1] = 0xbeef;
 
     // only do first 56 bytes of message.
-    spi_data.checksum = xor_checksum((uint32_t*)&spi_data, 14);
-
-    for (int i = 0; i < DATA_LEN; i++)
-        tx_buff[i] = ((uint16_t*)(&spi_data))[i];
+    spi_data.checksum = xor_checksum((uint32_t*)&spi_data, sizeof(spi_data_t) / 2 - 1);
+    memcpy(tx_buff, &spi_data, sizeof(spi_data_t));
+    //for (int i = 0; i < DATA_LEN; i++)
+    //    tx_buff[i] = ((uint16_t*)(&spi_data))[i];
 }
 
 void init_spi(void)
@@ -614,12 +614,9 @@ int main()
 
     // SPI doesn't work if enabled while the CS pin is pulled low
     // Wait for CS to not be low, then enable SPI
-    /*    if(!spi_enabled){
-            while((spi_enabled==0) && (cs.read() ==0)){wait_us(10);}
-            init_spi();
-            spi_enabled = 1;
-            }*/
     init_spi();
+
+    led = 1;
 
     while (1)
     {
