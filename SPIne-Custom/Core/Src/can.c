@@ -55,7 +55,21 @@ void MX_CAN1_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN CAN1_Init 2 */
+  CAN_FilterTypeDef filter;
+  filter.FilterBank = 0;
+  filter.FilterMode=CAN_FILTERMODE_IDMASK;
+  filter.FilterScale=CAN_FILTERSCALE_32BIT;
+  filter.FilterIdHigh=0x0000;
+  filter.FilterIdLow=0x0000;
+  filter.FilterMaskIdHigh=0x0000;
+  filter.FilterMaskIdLow=0x0000;
+  filter.FilterFIFOAssignment=CAN_FILTER_FIFO0;
+  filter.FilterActivation=ENABLE;
 
+  if(HAL_CAN_ConfigFilter(&hcan1, &filter) != HAL_OK)
+  {
+    Error_Handler();
+  }
   /* USER CODE END CAN1_Init 2 */
 
 }
@@ -87,7 +101,21 @@ void MX_CAN2_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN CAN2_Init 2 */
+  CAN_FilterTypeDef filter;
+  filter.FilterBank = 14;
+  filter.FilterMode=CAN_FILTERMODE_IDMASK;
+  filter.FilterScale=CAN_FILTERSCALE_32BIT;
+  filter.FilterIdHigh=0x0000;
+  filter.FilterIdLow=0x0000;
+  filter.FilterMaskIdHigh=0x0000;
+  filter.FilterMaskIdLow=0x0000;
+  filter.FilterFIFOAssignment=CAN_FILTER_FIFO0;
+  filter.FilterActivation=ENABLE;
 
+  if(HAL_CAN_ConfigFilter(&hcan1, &filter) != HAL_OK)
+  {
+    Error_Handler();
+  }
   /* USER CODE END CAN2_Init 2 */
 
 }

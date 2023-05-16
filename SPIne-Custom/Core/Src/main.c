@@ -99,6 +99,10 @@ int main(void)
   MX_SPI1_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
+  HAL_CAN_Start(&hcan1);
+  HAL_CAN_Start(&hcan2);
+  HAL_CAN_ActivateNotification(&hcan1, CAN_IT_RX_FIFO0_MSG_PENDING);
+  HAL_CAN_ActivateNotification(&hcan2, CAN_IT_RX_FIFO0_MSG_PENDING);
   HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
   /* USER CODE END 2 */
 
@@ -117,8 +121,6 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    //HAL_SPI_TransmitReceive(&hspi1, tx, rx, 16, 10000);
-    //HAL_UART_Transmit(&huart2, "hello", 6, 10000);
     HAL_Delay(1000);
   }
   /* USER CODE END 3 */
