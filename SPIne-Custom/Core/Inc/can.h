@@ -44,7 +44,7 @@ void MX_CAN1_Init(void);
 void MX_CAN2_Init(void);
 
 /* USER CODE BEGIN Prototypes */
-
+uint8_t CANx_SendStdData(CAN_HandleTypeDef* hcan, uint16_t ID, uint8_t *pData, uint16_t Len);
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus

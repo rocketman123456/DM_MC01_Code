@@ -61,12 +61,15 @@ typedef struct
 
 #pragma pack()
 
-typedef struct
-{
-    leg_cmd_t cmd[4];
-} robot_cmd_t;
+// typedef struct
+// {
+//     leg_cmd_t cmd[4];
+// } robot_cmd_t;
 
-typedef struct
-{
-    leg_state_t state[4];
-} robot_state_t;
+// typedef struct
+// {
+//     leg_state_t state[4];
+// } robot_state_t;
+
+void control();
+void fake_control();

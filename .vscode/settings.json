@@ -90,6 +90,7 @@
         "main.h": "c",
         "stm32f4xx_hal_gpio.h": "c",
         "cmsis_os.h": "c",
-        "crc.h": "c"
+        "crc.h": "c",
+        "semphr.h": "c"
     }
 }

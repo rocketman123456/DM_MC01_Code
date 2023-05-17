@@ -248,5 +248,26 @@ void HAL_CAN_MspDeInit(CAN_HandleTypeDef* canHandle)
 }
 
 /* USER CODE BEGIN 1 */
+uint8_t CANx_SendStdData(CAN_HandleTypeDef* hcan, uint16_t ID, uint8_t *pData, uint16_t Len)
+{
+  static CAN_TxHeaderTypeDef Tx_Header;
 
+  Tx_Header.StdId=ID;
+  Tx_Header.ExtId=0;
+  Tx_Header.IDE=0;
+  Tx_Header.RTR=0;
+  Tx_Header.DLC=Len;
+
+  if(HAL_CAN_AddTxMessage(hcan, &Tx_Header, pData, (uint32_t*)CAN_TX_MAILBOX0) != HAL_OK)
+  {
+    if(HAL_CAN_AddTxMessage(hcan, &Tx_Header, pData, (uint32_t*)CAN_TX_MAILBOX1) != HAL_OK)
+    {
+      if(HAL_CAN_AddTxMessage(hcan, &Tx_Header, pData, (uint32_t*)CAN_TX_MAILBOX2) != HAL_OK)
+      {
+        return 1;
+      }
+    }
+  }
+  return 0;
+}
 /* USER CODE END 1 */

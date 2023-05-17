@@ -1,4 +1,5 @@
 #include "message_ops.h"
+#include "math_ops.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -80,7 +81,10 @@ void unpack_reply(uint8_t* msg, leg_state_t* leg)
     float v = uint_to_float(v_int, V_MIN, V_MAX, 12);
     float t = uint_to_float(i_int, -T_MAX, T_MAX, 12);
 
-    leg->state[id - 1].p = p;
-    leg->state[id - 1].v = v;
-    leg->state[id - 1].t = t;
+    if(id <= 3 && id > 0)
+    {
+        leg->state[id - 1].p = p;
+        leg->state[id - 1].v = v;
+        leg->state[id - 1].t = t;
+    }
 }
