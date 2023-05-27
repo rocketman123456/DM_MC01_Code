@@ -34,28 +34,28 @@ typedef struct
 // 64 byte
 typedef struct
 {
-    motor_cmd_t cmd[3];
+    motor_cmd_t motor[3];
     int32_t flag;
 } leg_cmd_t;
 
 // 40 byte
 typedef struct
 {
-    motor_data_t state[3];
+    motor_data_t motor[3];
     int32_t flag;
 } leg_state_t;
 
 // 132 byte
 typedef struct
 {
-    leg_cmd_t cmd[2];
+    leg_cmd_t leg[2];
     uint32_t crc;
 } spine_cmd_t;
 
 // 84 byte
 typedef struct
 {
-    leg_state_t state[2];
+    leg_state_t leg[2];
     uint32_t crc;
 } spine_state_t;
 

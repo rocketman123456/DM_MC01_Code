@@ -64,18 +64,19 @@ void pack_cmd(uint8_t* msg, motor_cmd_t* joint)
 /// 12 bit current, between -40 and 40;
 /// CAN Packet is 5 8-bit words
 /// Formatted as follows.  For each quantity, bit 0 is LSB
-/// 0: [position[15-8]]
-/// 1: [position[7-0]]
-/// 2: [velocity[11-4]]
-/// 3: [velocity[3-0], current[11-8]]
-/// 4: [current[7-0]]
-void unpack_reply(uint8_t* msg, leg_state_t* leg)
+/// 0: [id]
+/// 1: [position[15-8]]
+/// 2: [position[7-0]]
+/// 3: [velocity[11-4]]
+/// 4: [velocity[3-0], current[11-8]]
+/// 5: [current[7-0]]
+uint16_t unpack_reply(uint8_t* msg, leg_state_t* leg)
 {
     /// unpack ints from can buffer ///
     uint16_t id    = msg[0];
-    uint16_t p_int = (msg[1] << 8) | msg[2];
-    uint16_t v_int = (msg[3] << 4) | (msg[4] >> 4);
-    uint16_t i_int = ((msg[4] & 0xF) << 8) | msg[5];
+    uint16_t p_int = ((uint16_t)(msg[1]) << 8) | (uint16_t)(msg[2]);
+    uint16_t v_int = ((uint16_t)(msg[3]) << 4) | (uint16_t)(msg[4] >> 4);
+    uint16_t i_int = ((uint16_t)(msg[4] & 0xF) << 8) | (uint16_t)(msg[5]);
     /// convert uints to floats ///
     float p = uint_to_float(p_int, P_MIN, P_MAX, 16);
     float v = uint_to_float(v_int, V_MIN, V_MAX, 12);
@@ -83,10 +84,11 @@ void unpack_reply(uint8_t* msg, leg_state_t* leg)
 
     if(id <= 3 && id > 0)
     {
-        leg->state[id - 1].p = p;
-        leg->state[id - 1].v = v;
-        leg->state[id - 1].t = t;
+        leg->motor[id - 1].p = p;
+        leg->motor[id - 1].v = v;
+        leg->motor[id - 1].t = t;
     }
+    return id;
 }
 
 void zero(uint8_t* msg)
