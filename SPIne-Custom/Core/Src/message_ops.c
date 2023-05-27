@@ -33,14 +33,14 @@
 /// 5: [kd[11-4]]
 /// 6: [kd[3-0], torque[11-8]]
 /// 7: [torque[7-0]]
-void pack_cmd(uint8_t* msg, motor_cmd_t joint)
+void pack_cmd(uint8_t* msg, motor_cmd_t* joint)
 {
     /// limit data to be within bounds ///
-    float p_des = fminf(fmaxf(P_MIN, joint.p_des), P_MAX);
-    float v_des = fminf(fmaxf(V_MIN, joint.v_des), V_MAX);
-    float kp    = fminf(fmaxf(KP_MIN, joint.kp), KP_MAX);
-    float kd    = fminf(fmaxf(KD_MIN, joint.kd), KD_MAX);
-    float t_ff  = fminf(fmaxf(T_MIN, joint.t_ff), T_MAX);
+    float p_des = fminf(fmaxf(P_MIN, joint->p_des), P_MAX);
+    float v_des = fminf(fmaxf(V_MIN, joint->v_des), V_MAX);
+    float kp    = fminf(fmaxf(KP_MIN, joint->kp), KP_MAX);
+    float kd    = fminf(fmaxf(KD_MIN, joint->kd), KD_MAX);
+    float t_ff  = fminf(fmaxf(T_MIN, joint->t_ff), T_MAX);
     /// convert floats to unsigned ints ///
     uint16_t p_int  = float_to_uint(p_des, P_MIN, P_MAX, 16);
     uint16_t v_int  = float_to_uint(v_des, V_MIN, V_MAX, 12);
@@ -87,4 +87,40 @@ void unpack_reply(uint8_t* msg, leg_state_t* leg)
         leg->state[id - 1].v = v;
         leg->state[id - 1].t = t;
     }
+}
+
+void zero(uint8_t* msg)
+{
+    msg[0] = 0xFF;
+    msg[1] = 0xFF;
+    msg[2] = 0xFF;
+    msg[3] = 0xFF;
+    msg[4] = 0xFF;
+    msg[5] = 0xFF;
+    msg[6] = 0xFF;
+    msg[7] = 0xFE;
+}
+
+void enter_motor_mode(uint8_t* msg)
+{
+    msg[0] = 0xFF;
+    msg[1] = 0xFF;
+    msg[2] = 0xFF;
+    msg[3] = 0xFF;
+    msg[4] = 0xFF;
+    msg[5] = 0xFF;
+    msg[6] = 0xFF;
+    msg[7] = 0xFC;
+}
+
+void exit_motor_mode(uint8_t* msg)
+{
+    msg[0] = 0xFF;
+    msg[1] = 0xFF;
+    msg[2] = 0xFF;
+    msg[3] = 0xFF;
+    msg[4] = 0xFF;
+    msg[5] = 0xFF;
+    msg[6] = 0xFF;
+    msg[7] = 0xFD;
 }
