@@ -108,13 +108,6 @@ const osThreadAttr_t Can2Task_attributes = {
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityLow,
 };
-/* Definitions for CanRxTask */
-osThreadId_t CanRxTaskHandle;
-const osThreadAttr_t CanRxTask_attributes = {
-  .name = "CanRxTask",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityLow,
-};
 /* Definitions for CmdMutex */
 osMutexId_t CmdMutexHandle;
 const osMutexAttr_t CmdMutex_attributes = {
@@ -134,6 +127,11 @@ const osEventFlagsAttr_t SPI_Event_attributes = {
 osEventFlagsId_t CAN_EventHandle;
 const osEventFlagsAttr_t CAN_Event_attributes = {
   .name = "CAN_Event"
+};
+/* Definitions for CAN_RX_Event */
+osEventFlagsId_t CAN_RX_EventHandle;
+const osEventFlagsAttr_t CAN_RX_Event_attributes = {
+  .name = "CAN_RX_Event"
 };
 
 /* Private function prototypes -----------------------------------------------*/
@@ -215,7 +213,6 @@ void motor_control(CAN_HandleTypeDef* hcan, uint8_t can_id)
 void StartDefaultTask(void *argument);
 void Can1TaskFunc(void *argument);
 void Can2TaskFunc(void *argument);
-void CanRxTaskFunc(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -262,9 +259,6 @@ void MX_FREERTOS_Init(void) {
   /* creation of Can2Task */
   Can2TaskHandle = osThreadNew(Can2TaskFunc, NULL, &Can2Task_attributes);
 
-  /* creation of CanRxTask */
-  CanRxTaskHandle = osThreadNew(CanRxTaskFunc, NULL, &CanRxTask_attributes);
-
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   /* USER CODE END RTOS_THREADS */
@@ -274,6 +268,9 @@ void MX_FREERTOS_Init(void) {
 
   /* creation of CAN_Event */
   CAN_EventHandle = osEventFlagsNew(&CAN_Event_attributes);
+
+  /* creation of CAN_RX_Event */
+  CAN_RX_EventHandle = osEventFlagsNew(&CAN_RX_Event_attributes);
 
   /* USER CODE BEGIN RTOS_EVENTS */
   /* add events, ... */
@@ -298,9 +295,7 @@ void StartDefaultTask(void *argument)
     r_event = osEventFlagsWait(CAN_EventHandle, EVENT1 | EVENT2, osFlagsWaitAll, portMAX_DELAY);
     g_state.crc = calculate((uint8_t*)&g_state, sizeof(spine_state_t) - 4);
     memcpy(spi_tx, &g_state, sizeof(spine_state_t));
-    //HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
-    //delay_us(50);
-    //HAL_UART_Transmit(&huart2, tx, sizeof(spine_state_t), 10000);
+    HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
   }
   /* USER CODE END StartDefaultTask */
 }
@@ -351,31 +346,6 @@ void Can2TaskFunc(void *argument)
   /* USER CODE END Can2TaskFunc */
 }
 
-/* USER CODE BEGIN Header_CanRxTaskFunc */
-/**
-* @brief Function implementing the CanRxTask thread.
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_CanRxTaskFunc */
-void CanRxTaskFunc(void *argument)
-{
-  /* USER CODE BEGIN CanRxTaskFunc */
-  /* Infinite loop */
-  for(;;)
-  {
-    osEventFlagsWait(CAN_EventHandle, EVENT3 | EVENT4 | EVENT5 | EVENT6 | EVENT7 | EVENT8, osFlagsWaitAll, portMAX_DELAY);
-    HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
-    //HAL_CAN_GetRxMessage(&hcan1, CAN_FILTER_FIFO0, &rx_header1, can_rx_msg_1);
-    //unpack_reply(can_rx_msg_1, &g_state.leg[0]);
-    //HAL_CAN_GetRxMessage(&hcan2, CAN_FILTER_FIFO0, &rx_header2, can_rx_msg_2);
-    //unpack_reply(can_rx_msg_2, &g_state.leg[1]);
-    //delay_us(10);
-    //osDelay(1000);
-  }
-  /* USER CODE END CanRxTaskFunc */
-}
-
 /* Private application code --------------------------------------------------*/
 /* USER CODE BEGIN Application */
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
@@ -386,7 +356,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
     // unpack data
     HAL_CAN_GetRxMessage(&hcan1, CAN_FILTER_FIFO0, &rx_header1, can_rx_msg_1);
     uint16_t id = unpack_reply(can_rx_msg_1, &g_state.leg[0]);
-    osEventFlagsSet(CAN_EventHandle, 1 << (id + 0 + 2));
+    osEventFlagsSet(CAN_RX_EventHandle, EVENT1);
   }
   if(hcan->Instance==CAN2)
   {
@@ -394,7 +364,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
     // unpack data
     HAL_CAN_GetRxMessage(&hcan2, CAN_FILTER_FIFO0, &rx_header2, can_rx_msg_2);
     uint16_t id = unpack_reply(can_rx_msg_2, &g_state.leg[1]);
-    osEventFlagsSet(CAN_EventHandle, 1 << (id + 3 + 2));
+    osEventFlagsSet(CAN_RX_EventHandle, EVENT2);
   }
 }
 
