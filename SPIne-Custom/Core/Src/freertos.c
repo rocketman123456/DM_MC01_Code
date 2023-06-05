@@ -73,7 +73,7 @@ uint8_t can_rx_msg_1[8] = {0};
 CAN_RxHeaderTypeDef rx_header2;
 uint8_t can_rx_msg_2[8] = {0};
 
-uint8_t can_tx_data[8] = {1, 2, 3, 4, 5, 6, 7, 8};
+uint8_t can_tx_data[3][8] = {{0}, {0}, {0}};
 
 uint8_t motor_enable[2] = {0};
 /* USER CODE END PD */
@@ -160,53 +160,70 @@ void delay_us(uint32_t nus)
   }
 }
 
+void wait_can_tx(CAN_HandleTypeDef* hcan)
+{
+  while(HAL_CAN_IsTxMessagePending(hcan, CAN_TX_MAILBOX0 | CAN_TX_MAILBOX1 | CAN_TX_MAILBOX2));
+}
+
 void motor_control(CAN_HandleTypeDef* hcan, uint8_t can_id)
 {
-  if(HAL_CAN_IsTxMessagePending(hcan, CAN_TX_MAILBOX0 | CAN_TX_MAILBOX1 | CAN_TX_MAILBOX2)) {
-    HAL_CAN_AbortTxRequest(hcan, CAN_TX_MAILBOX0 | CAN_TX_MAILBOX1 | CAN_TX_MAILBOX2);
-  }
+  //while(HAL_CAN_GetTxMailboxesFreeLevel(&hcan1)==0);
+  //while(HAL_CAN_IsTxMessagePending(hcan, CAN_TX_MAILBOX0 | CAN_TX_MAILBOX1 | CAN_TX_MAILBOX2));
+  //if(HAL_CAN_IsTxMessagePending(hcan, CAN_TX_MAILBOX0 | CAN_TX_MAILBOX1 | CAN_TX_MAILBOX2)) {
+  //  HAL_CAN_AbortTxRequest(hcan, CAN_TX_MAILBOX0 | CAN_TX_MAILBOX1 | CAN_TX_MAILBOX2);
+  //}
 
-  uint8_t delay = 150;
+  uint8_t delay = 200;
   if(motor_enable[can_id] == 0 && g_cmd.leg[can_id].flag == 1)
   {
     motor_enable[can_id] = g_cmd.leg[can_id].flag;
-    enter_motor_mode(can_tx_data);
+    enter_motor_mode(can_tx_data[0]);
 
-    CANx_SendStdData(hcan, 0x01, can_tx_data, 8);
-    delay_us(delay);
+    CANx_SendStdData(hcan, 0x01, can_tx_data[0], 8);
+    wait_can_tx(hcan);
+    // delay_us(delay);
 
-    CANx_SendStdData(hcan, 0x02, can_tx_data, 8);
-    delay_us(delay);
+    CANx_SendStdData(hcan, 0x02, can_tx_data[0], 8);
+    wait_can_tx(hcan);
+    // delay_us(delay);
 
-    CANx_SendStdData(hcan, 0x03, can_tx_data, 8);
-    delay_us(delay);
+    CANx_SendStdData(hcan, 0x03, can_tx_data[0], 8);
+    wait_can_tx(hcan);
+    // delay_us(delay);
   }
   else if(motor_enable[can_id] == 1 && g_cmd.leg[can_id].flag == 0)
   {
     motor_enable[can_id] = g_cmd.leg[can_id].flag;
-    exit_motor_mode(can_tx_data);
+    exit_motor_mode(can_tx_data[0]);
 
-    CANx_SendStdData(hcan, 0x01, can_tx_data, 8);
-    delay_us(delay);
+    CANx_SendStdData(hcan, 0x01, can_tx_data[0], 8);
+    wait_can_tx(hcan);
+    // delay_us(delay);
 
-    CANx_SendStdData(hcan, 0x02, can_tx_data, 8);
-    delay_us(delay);
+    CANx_SendStdData(hcan, 0x02, can_tx_data[0], 8);
+    wait_can_tx(hcan);
+    // delay_us(delay);
 
-    CANx_SendStdData(hcan, 0x03, can_tx_data, 8);
-    delay_us(delay);
+    CANx_SendStdData(hcan, 0x03, can_tx_data[0], 8);
+    wait_can_tx(hcan);
+    // delay_us(delay);
   }
 
-  pack_cmd(can_tx_data, &g_cmd.leg[can_id].motor[0]);
-  CANx_SendStdData(hcan, 0x01, can_tx_data, 8);
-  delay_us(delay);
+  pack_cmd(can_tx_data[0], &g_cmd.leg[can_id].motor[0]);
+  pack_cmd(can_tx_data[1], &g_cmd.leg[can_id].motor[1]);
+  pack_cmd(can_tx_data[2], &g_cmd.leg[can_id].motor[2]);
 
-  pack_cmd(can_tx_data, &g_cmd.leg[can_id].motor[1]);
-  CANx_SendStdData(hcan, 0x02, can_tx_data, 8);
-  delay_us(delay);
+  CANx_SendStdData(hcan, 0x01, can_tx_data[0], 8);
+  wait_can_tx(hcan);
+  // delay_us(delay);
 
-  pack_cmd(can_tx_data, &g_cmd.leg[can_id].motor[2]);
-  CANx_SendStdData(hcan, 0x03, can_tx_data, 8);
-  delay_us(delay);
+  CANx_SendStdData(hcan, 0x02, can_tx_data[1], 8);
+  wait_can_tx(hcan);
+  // delay_us(delay);
+
+  CANx_SendStdData(hcan, 0x03, can_tx_data[2], 8);
+  wait_can_tx(hcan);
+  // delay_us(delay);
 }
 /* USER CODE END FunctionPrototypes */
 
@@ -292,9 +309,16 @@ void StartDefaultTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
-    r_event = osEventFlagsWait(CAN_EventHandle, EVENT1 | EVENT2, osFlagsWaitAll, portMAX_DELAY);
+    r_event = osEventFlagsWait(SPI_EventHandle, EVENT1, osFlagsWaitAny, portMAX_DELAY);
+
+    motor_control(&hcan1, 0);
+    motor_control(&hcan2, 1);
+
+    delay_us(20);
+
     g_state.crc = calculate((uint8_t*)&g_state, sizeof(spine_state_t) - 4);
     memcpy(spi_tx, &g_state, sizeof(spine_state_t));
+
     HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
   }
   /* USER CODE END StartDefaultTask */
@@ -314,11 +338,13 @@ void Can1TaskFunc(void *argument)
   /* Infinite loop */
   for(;;)
   {
-    r_event = osEventFlagsWait(SPI_EventHandle, EVENT1, osFlagsWaitAny, portMAX_DELAY);
+    //r_event = osEventFlagsWait(SPI_EventHandle, EVENT1, osFlagsWaitAny, portMAX_DELAY);
 
-    motor_control(&hcan1, 0);
+    //motor_control(&hcan1, 0);
 
-    osEventFlagsSet(CAN_EventHandle, EVENT1);
+    //osEventFlagsSet(CAN_EventHandle, EVENT1);
+
+    osDelay(1000);
   }
   /* USER CODE END Can1TaskFunc */
 }
@@ -337,11 +363,13 @@ void Can2TaskFunc(void *argument)
   /* Infinite loop */
   for(;;)
   {
-    r_event = osEventFlagsWait(SPI_EventHandle, EVENT2, osFlagsWaitAny, portMAX_DELAY);
+    //r_event = osEventFlagsWait(SPI_EventHandle, EVENT2, osFlagsWaitAny, portMAX_DELAY);
 
-    motor_control(&hcan2, 1);
+    //motor_control(&hcan2, 1);
 
-    osEventFlagsSet(CAN_EventHandle, EVENT2);
+    //osEventFlagsSet(CAN_EventHandle, EVENT2);
+
+    osDelay(1000);
   }
   /* USER CODE END Can2TaskFunc */
 }
@@ -352,19 +380,17 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 {
   if(hcan->Instance==CAN1)
   {
-    //HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
     // unpack data
     HAL_CAN_GetRxMessage(&hcan1, CAN_FILTER_FIFO0, &rx_header1, can_rx_msg_1);
-    uint16_t id = unpack_reply(can_rx_msg_1, &g_state.leg[0]);
-    osEventFlagsSet(CAN_RX_EventHandle, EVENT1);
+    unpack_reply(can_rx_msg_1, &g_state.leg[0]);
+    //osEventFlagsSet(CAN_RX_EventHandle, EVENT1);
   }
   if(hcan->Instance==CAN2)
   {
-    //HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
     // unpack data
     HAL_CAN_GetRxMessage(&hcan2, CAN_FILTER_FIFO0, &rx_header2, can_rx_msg_2);
-    uint16_t id = unpack_reply(can_rx_msg_2, &g_state.leg[1]);
-    osEventFlagsSet(CAN_RX_EventHandle, EVENT2);
+    unpack_reply(can_rx_msg_2, &g_state.leg[1]);
+    //osEventFlagsSet(CAN_RX_EventHandle, EVENT2);
   }
 }
 
@@ -373,7 +399,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   if(GPIO_Pin == SPI_CS_Pin)
   {
     //HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
-    HAL_SPI_TransmitReceive(&hspi1, spi_tx, spi_rx, 132, 100);
+    HAL_SPI_TransmitReceive(&hspi1, spi_tx, spi_rx, sizeof(spine_cmd_t), 1000);
 
     hspi1.Instance->DR = 0x00;
 
@@ -383,18 +409,14 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 
     if(crc != g_cmd.crc)
     {
-      HAL_UART_Transmit(&huart2, "crc error", 10, 10000);
-      HAL_UART_Transmit(&huart2, (uint8_t*) &g_cmd, sizeof(spine_cmd_t), 10000);
-      // skip error command
-      return;
+      // HAL_UART_Transmit(&huart2, "crc error", 10, 10000);
+      // HAL_UART_Transmit(&huart2, (uint8_t*) &g_cmd, sizeof(spine_cmd_t), 10000);
+      // // skip error command
+      // return;
     }
 
     // trigger event to main task
-    osEventFlagsSet(SPI_EventHandle, EVENT1 | EVENT2);
-
-    // copy data to tx
-    g_state.crc = calculate((uint8_t*)&g_state, sizeof(spine_state_t) - 4);
-    memcpy(spi_tx, &g_state, sizeof(spine_state_t));
+    osEventFlagsSet(SPI_EventHandle, EVENT1);
   }
 }
 /* USER CODE END Application */

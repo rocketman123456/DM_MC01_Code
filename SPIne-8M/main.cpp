@@ -359,10 +359,10 @@ void spi_isr(void)
         spi_data.flags[1] = 0xdead;
     }
 
-    test_control();
-    // control();
-    // PackAll();
-    // WriteAll();
+    // test_control();
+    control();
+    PackAll();
+    WriteAll();
 
     pc.printf("\n\r exit SPI_ISR\n\r");
 }

@@ -70,7 +70,7 @@ void pack_cmd(uint8_t* msg, motor_cmd_t* joint)
 /// 3: [velocity[11-4]]
 /// 4: [velocity[3-0], current[11-8]]
 /// 5: [current[7-0]]
-uint16_t unpack_reply(uint8_t* msg, leg_state_t* leg)
+void unpack_reply(uint8_t* msg, leg_state_t* leg)
 {
     /// unpack ints from can buffer ///
     uint16_t id    = msg[0];
@@ -88,7 +88,6 @@ uint16_t unpack_reply(uint8_t* msg, leg_state_t* leg)
         leg->motor[id - 1].v = v;
         leg->motor[id - 1].t = t;
     }
-    return id;
 }
 
 void zero(uint8_t* msg)
