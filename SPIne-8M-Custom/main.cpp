@@ -131,7 +131,7 @@ void pack_cmd(CANMessage* msg, motor_cmd_t& joint)
 /// 2: [velocity[11-4]]
 /// 3: [velocity[3-0], current[11-8]]
 /// 4: [current[7-0]]
-void unpack_reply(CANMessage msg, motor_data_t* leg)
+void unpack_reply(CANMessage msg, leg_state_t* leg)
 {
     /// unpack ints from can buffer ///
     uint16_t id    = msg.data[0];
@@ -159,26 +159,14 @@ uint32_t xor_checksum(uint32_t* data, size_t len)
     return t;
 }
 
-void rxISR1()
-{
-    can1.read(rxMsg1); // read message into Rx message storage
-    unpack_reply(rxMsg1, &l1_state);
-}
-
-void rxISR2()
-{
-    can2.read(rxMsg2);
-    unpack_reply(rxMsg2, &l2_state);
-}
-
 void PackAll()
 {
-    pack_cmd(&a1_can, l1_control.a);
-    pack_cmd(&a2_can, l2_control.a);
-    pack_cmd(&h1_can, l1_control.h);
-    pack_cmd(&h2_can, l2_control.h);
-    pack_cmd(&k1_can, l1_control.k);
-    pack_cmd(&k2_can, l2_control.k);
+    pack_cmd(&a1_can, l1_control.motor[0]);
+    pack_cmd(&a2_can, l2_control.motor[0]);
+    pack_cmd(&h1_can, l1_control.motor[1]);
+    pack_cmd(&h2_can, l2_control.motor[1]);
+    pack_cmd(&k1_can, l1_control.motor[2]);
+    pack_cmd(&k2_can, l2_control.motor[2]);
 }
 
 void WriteAll()
@@ -313,7 +301,8 @@ void spi_isr(void)
         }
     }
 
-    pc.printf("read SPI_ISR finish \n");
+    //pc.printf("read SPI_ISR finish \n");
+    pc.write((uint8_t*)tx_buff, sizeof(spine_cmd_t), NULL);
 
     // after reading, save data into spi_command
     // should probably check checksum first!
@@ -323,8 +312,8 @@ void spi_isr(void)
     // run control, which fills in tx_buff for the next iteration
     if (calc_checksum != spi_command.crc)
     {
-        spi_data.flags[0] = 0xdead;
-        spi_data.flags[1] = 0xdead;
+        spi_data.leg[0].flag = 0xdead;
+        spi_data.leg[1].flag = 0xdead;
         pc.printf("checksum error SPI_ISR\n");
         return;
     }
@@ -362,7 +351,7 @@ int softstop_joint(motor_data_t& state, motor_cmd_t* control, float limit_p, flo
 
 void control()
 {
-    if (((spi_command.flags[0] & 0x1) == 1) && (enabled == 0))
+    if (((spi_command.leg[0].flag & 0x1) == 1) && (enabled == 0))
     {
         enabled = 1;
         EnterMotorMode(&a1_can);
@@ -380,7 +369,7 @@ void control()
         printf("enter motor mode\n");
         return;
     }
-    else if ((((spi_command.flags[0] & 0x1)) == 0) && (enabled == 1))
+    else if ((((spi_command.leg[1].flag & 0x1)) == 0) && (enabled == 1))
     {
         enabled = 0;
         ExitMotorMode(&a1_can);
@@ -424,8 +413,8 @@ void control()
         printf("estopped!!!!\n\r");
         memset(&l1_control, 0, sizeof(l1_control));
         memset(&l2_control, 0, sizeof(l2_control));
-        spi_data.flags[0] = 0xdead;
-        spi_data.flags[1] = 0xdead;
+        spi_data.leg[0].flag = 0xdead;
+        spi_data.leg[0].flag = 0xdead;
     }
     else
     {
@@ -434,33 +423,34 @@ void control()
 
         for(int i = 0; i < 3; ++i)
         {
-            l1_control.motor[i].p_des = spi_command.leg[0].motor[i].p_des
-            l1_control.motor[i].v_des = spi_command.leg[0].motor[i].v_des
-            l1_control.motor[i].kp = spi_command.leg[0].motor[i].kp
-            l1_control.motor[i].kd = spi_command.leg[0].motor[i].kd
-            l1_control.motor[i].t_ff = spi_command.leg[0].motor[i].t_ff
+            l1_control.motor[i].p_des = spi_command.leg[0].motor[i].p_des;
+            l1_control.motor[i].v_des = spi_command.leg[0].motor[i].v_des;
+            l1_control.motor[i].kp = spi_command.leg[0].motor[i].kp;
+            l1_control.motor[i].kd = spi_command.leg[0].motor[i].kd;
+            l1_control.motor[i].t_ff = spi_command.leg[0].motor[i].t_ff;
         }
 
         for(int i = 0; i < 3; ++i)
         {
-            l2_control.motor[i].p_des = spi_command.leg[0].motor[i].p_des
-            l2_control.motor[i].v_des = spi_command.leg[0].motor[i].v_des
-            l2_control.motor[i].kp = spi_command.leg[0].motor[i].kp
-            l2_control.motor[i].kd = spi_command.leg[0].motor[i].kd
-            l2_control.motor[i].t_ff = spi_command.leg[0].motor[i].t_ff
+            l2_control.motor[i].p_des = spi_command.leg[0].motor[i].p_des;
+            l2_control.motor[i].v_des = spi_command.leg[0].motor[i].v_des;
+            l2_control.motor[i].kp = spi_command.leg[0].motor[i].kp;
+            l2_control.motor[i].kd = spi_command.leg[0].motor[i].kd;
+            l2_control.motor[i].t_ff = spi_command.leg[0].motor[i].t_ff;
         }
 
-        spi_data.flags[0] = 0;
-        spi_data.flags[1] = 0;
-        spi_data.flags[0] |= softstop_joint(l1_state.a, &l1_control.a, A_LIM_P, A_LIM_N);
-        spi_data.flags[0] |= (softstop_joint(l1_state.h, &l1_control.h, H_LIM_P, H_LIM_N)) << 1;
-        // spi_data.flags[0] |= (softstop_joint(l1_state.k, &l1_control.k, K_LIM_P, K_LIM_N))<<2;
-        spi_data.flags[1] |= softstop_joint(l2_state.a, &l2_control.a, A_LIM_P, A_LIM_N);
-        spi_data.flags[1] |= (softstop_joint(l2_state.h, &l2_control.h, H_LIM_P, H_LIM_N)) << 1;
-        // spi_data.flags[1] |= (softstop_joint(l2_state.k, &l2_control.k, K_LIM_P, K_LIM_N))<<2;
+        spi_data.leg[0].flag = 0;
+        spi_data.leg[1].flag = 0;
+
+        spi_data.leg[0].flag |= softstop_joint(l1_state.motor[0], &l1_control.motor[0], A_LIM_P, A_LIM_N);
+        spi_data.leg[0].flag |= (softstop_joint(l1_state.motor[1], &l1_control.motor[1], H_LIM_P, H_LIM_N)) << 1;
+        // spi_data.leg[0].flag |= (softstop_joint(l1_state.k, &l1_control.k, K_LIM_P, K_LIM_N))<<2;
+        spi_data.leg[1].flag |= softstop_joint(l2_state.motor[0], &l2_control.motor[0], A_LIM_P, A_LIM_N);
+        spi_data.leg[1].flag |= (softstop_joint(l2_state.motor[1], &l2_control.motor[1], H_LIM_P, H_LIM_N)) << 1;
+        // spi_data.leg[1].flag |= (softstop_joint(l2_state.k, &l2_control.k, K_LIM_P, K_LIM_N))<<2;
     }
 
-    spi_data.crc = crc((uint8_t*)&spi_data, sizeof(spine_state_t) - 4);
+    spi_data.crc = calculate((uint8_t*)&spi_data, sizeof(spine_state_t) - 4);
     memcpy(tx_buff, &spi_data, sizeof(spine_state_t));
 }
 
@@ -477,11 +467,11 @@ void test_control()
         spi_data.leg[i].motor[2].v = spi_command.leg[i].motor[2].v_des + 1.f;
     }
 
-    spi_data.flags[0] = 0xdead;
-    spi_data.flags[1] = 0xbeef;
+    spi_data.leg[0].flag = 0xdead;
+    spi_data.leg[0].flag = 0xbeef;
 
     // only do first 56 bytes of message.
-    spi_data.crc = crc((uint32_t*)&spi_data, sizeof(spine_state_t) - 4);
+    spi_data.crc = calculate((uint8_t*)&spi_data, sizeof(spine_state_t) - 4);
     memcpy(tx_buff, &spi_data, sizeof(spine_state_t));
 }
 
@@ -507,15 +497,13 @@ int main()
     estop.mode(PullUp);
 
     // can1.frequency(1000000);                     // set bit rate to 1Mbps
-    // can1.attach(&rxISR1);                 // attach 'CAN receive-complete' interrupt handler
     can1.filter(CAN_ID << 21, 0xFFE00004, CANStandard, 0); // set up can filter
     // can2.frequency(1000000);                     // set bit rate to 1Mbps
-    // can2.attach(&rxISR2);                 // attach 'CAN receive-complete' interrupt handler
     can2.filter(CAN_ID << 21, 0xFFE00004, CANStandard, 0); // set up can filter
 
-    memset(&tx_buff, 0, TX_LEN * sizeof(uint16_t));
-    memset(&spi_data, 0, sizeof(spi_data_t));
-    memset(&spi_command, 0, sizeof(spi_command_t));
+    memset(&tx_buff, 0, sizeof(spine_cmd_t));
+    memset(&spi_data, 0, sizeof(spine_state_t));
+    memset(&spi_command, 0, sizeof(spine_cmd_t));
 
     NVIC_SetPriority(TIM5_IRQn, 1);
     // NVIC_SetPriority(CAN1_RX0_IRQn, 3);
@@ -540,12 +528,12 @@ int main()
     k1_can.id = 0x3;
     k2_can.id = 0x3;
 
-    pack_cmd(&a1_can, l1_control.a);
-    pack_cmd(&a2_can, l2_control.a);
-    pack_cmd(&h1_can, l1_control.h);
-    pack_cmd(&h2_can, l2_control.h);
-    pack_cmd(&k1_can, l1_control.k);
-    pack_cmd(&k2_can, l2_control.k);
+    pack_cmd(&a1_can, l1_control.motor[0]);
+    pack_cmd(&a2_can, l2_control.motor[0]);
+    pack_cmd(&h1_can, l1_control.motor[1]);
+    pack_cmd(&h2_can, l2_control.motor[1]);
+    pack_cmd(&k1_can, l1_control.motor[2]);
+    pack_cmd(&k2_can, l2_control.motor[2]);
     WriteAll();
 
     // SPI doesn't work if enabled while the CS pin is pulled low

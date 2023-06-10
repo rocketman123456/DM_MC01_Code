@@ -2420,6 +2420,16 @@
               <FilePath>leg_message.h</FilePath>
             </File>
             <File>
+              <FileName>crc.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\crc.h</FilePath>
+            </File>
+            <File>
+              <FileName>crc.cpp</FileName>
+              <FileType>8</FileType>
+              <FilePath>.\crc.cpp</FilePath>
+            </File>
+            <File>
               <FileName>main.cpp</FileName>
               <FileType>8</FileType>
               <FilePath>main.cpp</FilePath>
@@ -2454,7 +2464,7 @@
   <LayerInfo>
     <Layers>
       <Layer>
-        <LayName>&lt;Project Info&gt;</LayName>
+        <LayName>SPIne</LayName>
         <LayTarg>0</LayTarg>
         <LayPrjMark>1</LayPrjMark>
       </Layer>
