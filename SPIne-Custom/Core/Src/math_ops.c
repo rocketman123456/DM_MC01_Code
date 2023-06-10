@@ -12,6 +12,18 @@
 //     return (((x) < (y)) ? (x) : (y));
 // }
 
+float fmaxf_(float x, float y)
+{
+    /// Returns maximum of x, y ///
+    return (((x) > (y)) ? (x) : (y));
+}
+
+float fminf_(float x, float y)
+{
+    /// Returns minimum of x, y ///
+    return (((x) < (y)) ? (x) : (y));
+}
+
 float fmaxf3(float x, float y, float z)
 {
     /// Returns maximum of x, y, z ///

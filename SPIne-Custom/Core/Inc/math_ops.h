@@ -4,6 +4,8 @@
 
 #include "math.h"
 
+float fmaxf_(float x, float y);
+float fminf_(float x, float y);
 //float fmaxf(float x, float y);
 //float fminf(float x, float y);
 float fmaxf3(float x, float y, float z);

@@ -565,10 +565,6 @@ int main()
     pc.baud(921600);
     pc.attach(&serial_isr);
     estop.mode(PullUp);
-    // spi.format(16, 0);
-    // spi.frequency(1000000);
-    // spi.reply(0x0);
-    // cs.fall(&spi_isr);
 
     // can1.frequency(1000000);                     // set bit rate to 1Mbps
     // can1.attach(&rxISR1);                 // attach 'CAN receive-complete' interrupt handler

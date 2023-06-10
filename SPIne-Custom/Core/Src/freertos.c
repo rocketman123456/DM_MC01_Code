@@ -73,7 +73,11 @@ uint8_t can_rx_msg_1[8] = {0};
 CAN_RxHeaderTypeDef rx_header2;
 uint8_t can_rx_msg_2[8] = {0};
 
-uint8_t can_tx_data[3][8] = {{0}, {0}, {0}};
+uint8_t can_tx_data[3][8] = {
+  {0, 1, 2, 3, 4, 5, 6, 7}, 
+  {0, 1, 2, 3, 4, 5, 6, 7}, 
+  {0, 1, 2, 3, 4, 5, 6, 7}
+};
 
 uint8_t motor_enable[2] = {0};
 /* USER CODE END PD */
@@ -93,20 +97,6 @@ const osThreadAttr_t mainTask_attributes = {
   .name = "mainTask",
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityNormal,
-};
-/* Definitions for Can1Task */
-osThreadId_t Can1TaskHandle;
-const osThreadAttr_t Can1Task_attributes = {
-  .name = "Can1Task",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityLow,
-};
-/* Definitions for Can2Task */
-osThreadId_t Can2TaskHandle;
-const osThreadAttr_t Can2Task_attributes = {
-  .name = "Can2Task",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityLow,
 };
 /* Definitions for CmdMutex */
 osMutexId_t CmdMutexHandle;
@@ -179,57 +169,61 @@ void motor_control(CAN_HandleTypeDef* hcan, uint8_t can_id)
     motor_enable[can_id] = g_cmd.leg[can_id].flag;
     enter_motor_mode(can_tx_data[0]);
 
-    CANx_SendStdData(hcan, 0x01, can_tx_data[0], 8);
     wait_can_tx(hcan);
-    // delay_us(delay);
+
+    CANx_SendStdData(hcan, 0x01, can_tx_data[0], 8);
+    // wait_can_tx(hcan);
+    delay_us(delay);
 
     CANx_SendStdData(hcan, 0x02, can_tx_data[0], 8);
-    wait_can_tx(hcan);
-    // delay_us(delay);
+    // wait_can_tx(hcan);
+    delay_us(delay);
 
     CANx_SendStdData(hcan, 0x03, can_tx_data[0], 8);
-    wait_can_tx(hcan);
-    // delay_us(delay);
+    // wait_can_tx(hcan);
+    delay_us(delay);
   }
   else if(motor_enable[can_id] == 1 && g_cmd.leg[can_id].flag == 0)
   {
     motor_enable[can_id] = g_cmd.leg[can_id].flag;
     exit_motor_mode(can_tx_data[0]);
 
-    CANx_SendStdData(hcan, 0x01, can_tx_data[0], 8);
     wait_can_tx(hcan);
-    // delay_us(delay);
+
+    CANx_SendStdData(hcan, 0x01, can_tx_data[0], 8);
+    // wait_can_tx(hcan);
+    delay_us(delay);
 
     CANx_SendStdData(hcan, 0x02, can_tx_data[0], 8);
-    wait_can_tx(hcan);
-    // delay_us(delay);
+    // wait_can_tx(hcan);
+    delay_us(delay);
 
     CANx_SendStdData(hcan, 0x03, can_tx_data[0], 8);
-    wait_can_tx(hcan);
-    // delay_us(delay);
+    // wait_can_tx(hcan);
+    delay_us(delay);
   }
 
   pack_cmd(can_tx_data[0], &g_cmd.leg[can_id].motor[0]);
   pack_cmd(can_tx_data[1], &g_cmd.leg[can_id].motor[1]);
   pack_cmd(can_tx_data[2], &g_cmd.leg[can_id].motor[2]);
 
-  CANx_SendStdData(hcan, 0x01, can_tx_data[0], 8);
   wait_can_tx(hcan);
-  // delay_us(delay);
+
+  CANx_SendStdData(hcan, 0x01, can_tx_data[0], 8);
+  //wait_can_tx(hcan);
+  delay_us(delay);
 
   CANx_SendStdData(hcan, 0x02, can_tx_data[1], 8);
-  wait_can_tx(hcan);
-  // delay_us(delay);
+  //wait_can_tx(hcan);
+  delay_us(delay);
 
   CANx_SendStdData(hcan, 0x03, can_tx_data[2], 8);
-  wait_can_tx(hcan);
-  // delay_us(delay);
+  //wait_can_tx(hcan);
+  delay_us(delay);
 }
 /* USER CODE END FunctionPrototypes */
 
 void StartDefaultTask(void *argument);
-void Can1TaskFunc(void *argument);
-void Can2TaskFunc(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -270,12 +264,6 @@ void MX_FREERTOS_Init(void) {
   /* creation of mainTask */
   mainTaskHandle = osThreadNew(StartDefaultTask, NULL, &mainTask_attributes);
 
-  /* creation of Can1Task */
-  Can1TaskHandle = osThreadNew(Can1TaskFunc, NULL, &Can1Task_attributes);
-
-  /* creation of Can2Task */
-  Can2TaskHandle = osThreadNew(Can2TaskFunc, NULL, &Can2Task_attributes);
-
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   /* USER CODE END RTOS_THREADS */
@@ -314,64 +302,12 @@ void StartDefaultTask(void *argument)
     motor_control(&hcan1, 0);
     motor_control(&hcan2, 1);
 
-    delay_us(20);
-
     g_state.crc = calculate((uint8_t*)&g_state, sizeof(spine_state_t) - 4);
     memcpy(spi_tx, &g_state, sizeof(spine_state_t));
 
-    HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+    // HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
   }
   /* USER CODE END StartDefaultTask */
-}
-
-/* USER CODE BEGIN Header_Can1TaskFunc */
-/**
-* @brief Function implementing the Can1Task thread.
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_Can1TaskFunc */
-void Can1TaskFunc(void *argument)
-{
-  /* USER CODE BEGIN Can1TaskFunc */
-  EventBits_t r_event = pdPASS;
-  /* Infinite loop */
-  for(;;)
-  {
-    //r_event = osEventFlagsWait(SPI_EventHandle, EVENT1, osFlagsWaitAny, portMAX_DELAY);
-
-    //motor_control(&hcan1, 0);
-
-    //osEventFlagsSet(CAN_EventHandle, EVENT1);
-
-    osDelay(1000);
-  }
-  /* USER CODE END Can1TaskFunc */
-}
-
-/* USER CODE BEGIN Header_Can2TaskFunc */
-/**
-* @brief Function implementing the Can2Task thread.
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_Can2TaskFunc */
-void Can2TaskFunc(void *argument)
-{
-  /* USER CODE BEGIN Can2TaskFunc */
-  EventBits_t r_event = pdPASS;
-  /* Infinite loop */
-  for(;;)
-  {
-    //r_event = osEventFlagsWait(SPI_EventHandle, EVENT2, osFlagsWaitAny, portMAX_DELAY);
-
-    //motor_control(&hcan2, 1);
-
-    //osEventFlagsSet(CAN_EventHandle, EVENT2);
-
-    osDelay(1000);
-  }
-  /* USER CODE END Can2TaskFunc */
 }
 
 /* Private application code --------------------------------------------------*/
@@ -399,9 +335,14 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   if(GPIO_Pin == SPI_CS_Pin)
   {
     //HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
-    HAL_SPI_TransmitReceive(&hspi1, spi_tx, spi_rx, sizeof(spine_cmd_t), 1000);
+    HAL_SPI_TransmitReceive(&hspi1, spi_tx, spi_rx, sizeof(spine_cmd_t), 100);
 
     hspi1.Instance->DR = 0x00;
+
+    __HAL_RCC_SPI1_CLK_DISABLE();
+
+    HAL_SPI_MspDeInit(&hspi1);
+    MX_SPI1_Init();
 
     // decode rx
     memcpy(&g_cmd, spi_rx, sizeof(spine_cmd_t));
@@ -409,11 +350,13 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 
     if(crc != g_cmd.crc)
     {
+      HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
       // HAL_UART_Transmit(&huart2, "crc error", 10, 10000);
-      // HAL_UART_Transmit(&huart2, (uint8_t*) &g_cmd, sizeof(spine_cmd_t), 10000);
-      // // skip error command
+      // skip error command
       // return;
     }
+
+    HAL_UART_Transmit(&huart2, (uint8_t*) &g_cmd, sizeof(spine_cmd_t), 10000);
 
     // trigger event to main task
     osEventFlagsSet(SPI_EventHandle, EVENT1);

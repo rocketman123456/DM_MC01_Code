@@ -17,6 +17,16 @@
 #define T_MIN -18.0f
 #define T_MAX 18.0f
 
+/// Joint Soft Stops ///
+#define A_LIM_P 1.5f
+#define A_LIM_N -1.5f
+#define H_LIM_P 5.0f
+#define H_LIM_N -5.0f
+#define K_LIM_P 0.2f
+#define K_LIM_N 7.7f
+#define KP_SOFTSTOP 100.0f
+#define KD_SOFTSTOP 0.4f;
+
 /// CAN Command Packet Structure ///
 /// 16 bit position command, between -4*pi and 4*pi
 /// 12 bit velocity command, between -30 and + 30 rad/s
@@ -36,11 +46,11 @@
 void pack_cmd(uint8_t* msg, motor_cmd_t* joint)
 {
     /// limit data to be within bounds ///
-    float p_des = fminf(fmaxf(P_MIN, joint->p_des), P_MAX);
-    float v_des = fminf(fmaxf(V_MIN, joint->v_des), V_MAX);
-    float kp    = fminf(fmaxf(KP_MIN, joint->kp), KP_MAX);
-    float kd    = fminf(fmaxf(KD_MIN, joint->kd), KD_MAX);
-    float t_ff  = fminf(fmaxf(T_MIN, joint->t_ff), T_MAX);
+    float p_des = fminf_(fmaxf_(P_MIN, joint->p_des), P_MAX);
+    float v_des = fminf_(fmaxf_(V_MIN, joint->v_des), V_MAX);
+    float kp    = fminf_(fmaxf_(KP_MIN, joint->kp), KP_MAX);
+    float kd    = fminf_(fmaxf_(KD_MIN, joint->kd), KD_MAX);
+    float t_ff  = fminf_(fmaxf_(T_MIN, joint->t_ff), T_MAX);
     /// convert floats to unsigned ints ///
     uint16_t p_int  = float_to_uint(p_des, P_MIN, P_MAX, 16);
     uint16_t v_int  = float_to_uint(v_des, V_MIN, V_MAX, 12);
