@@ -5115,30 +5115,6 @@
     <File>
       <GroupNumber>2</GroupNumber>
       <FileNumber>407</FileNumber>
-      <FileType>5</FileType>
-      <tvExp>0</tvExp>
-      <tvExpOptDlg>0</tvExpOptDlg>
-      <bDave2>0</bDave2>
-      <PathWithFileName>.\crc.h</PathWithFileName>
-      <FilenameWithoutPath>crc.h</FilenameWithoutPath>
-      <RteFlg>0</RteFlg>
-      <bShared>0</bShared>
-    </File>
-    <File>
-      <GroupNumber>2</GroupNumber>
-      <FileNumber>408</FileNumber>
-      <FileType>8</FileType>
-      <tvExp>0</tvExp>
-      <tvExpOptDlg>0</tvExpOptDlg>
-      <bDave2>0</bDave2>
-      <PathWithFileName>.\crc.cpp</PathWithFileName>
-      <FilenameWithoutPath>crc.cpp</FilenameWithoutPath>
-      <RteFlg>0</RteFlg>
-      <bShared>0</bShared>
-    </File>
-    <File>
-      <GroupNumber>2</GroupNumber>
-      <FileNumber>409</FileNumber>
       <FileType>8</FileType>
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
@@ -5150,7 +5126,7 @@
     </File>
     <File>
       <GroupNumber>2</GroupNumber>
-      <FileNumber>410</FileNumber>
+      <FileNumber>408</FileNumber>
       <FileType>8</FileType>
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
@@ -5162,7 +5138,7 @@
     </File>
     <File>
       <GroupNumber>2</GroupNumber>
-      <FileNumber>411</FileNumber>
+      <FileNumber>409</FileNumber>
       <FileType>5</FileType>
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
@@ -5174,7 +5150,7 @@
     </File>
     <File>
       <GroupNumber>2</GroupNumber>
-      <FileNumber>412</FileNumber>
+      <FileNumber>410</FileNumber>
       <FileType>5</FileType>
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>

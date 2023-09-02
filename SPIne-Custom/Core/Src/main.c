@@ -105,8 +105,8 @@ int main(void)
   HAL_CAN_ActivateNotification(&hcan2, CAN_IT_RX_FIFO0_MSG_PENDING);
   HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
 
-  //uint8_t data = 0xff;
-  //HAL_SPI_TransmitReceive(&hspi1, &data, &data, 1, 100);
+  uint8_t data = 0xff;
+  HAL_SPI_TransmitReceive(&hspi1, &data, &data, 1, 100);
   /* USER CODE END 2 */
 
   /* Init scheduler */

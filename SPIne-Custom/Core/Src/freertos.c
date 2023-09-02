@@ -335,17 +335,12 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   if(GPIO_Pin == SPI_CS_Pin)
   {
     //HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
-    HAL_SPI_TransmitReceive(&hspi1, spi_tx, spi_rx, sizeof(spine_cmd_t), 100);
+    HAL_SPI_TransmitReceive(&hspi1, spi_tx, spi_rx, sizeof(spine_cmd_t) + 1, 100);
 
     hspi1.Instance->DR = 0x00;
 
-    __HAL_RCC_SPI1_CLK_DISABLE();
-
-    HAL_SPI_MspDeInit(&hspi1);
-    MX_SPI1_Init();
-
     // decode rx
-    memcpy(&g_cmd, spi_rx, sizeof(spine_cmd_t));
+    memcpy(&g_cmd, spi_rx + 1, sizeof(spine_cmd_t));
     uint32_t crc = calculate((uint8_t*)&g_cmd, sizeof(spine_cmd_t) - 4);
 
     if(crc != g_cmd.crc)
